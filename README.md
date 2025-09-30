@@ -13,12 +13,280 @@ Already a pro? Just edit this README.md and make it your own. Want to make it ea
 - [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
 - [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
 
+# Limits SDK
+
+A TypeScript SDK for interacting with the Limits trading platform API. This SDK provides type-safe methods for trading operations, account management, and TWAP orders.
+
+## Features
+
+- 🔒 **Type Safety**: Full TypeScript support with comprehensive type definitions
+- 🚀 **Easy to Use**: Simple, intuitive API for all trading operations
+- 📦 **Batch Operations**: Support for batch order creation
+- ⚡ **TWAP Orders**: Time-Weighted Average Price order support
+- 🔧 **Error Handling**: Comprehensive error handling with detailed error types
+- 🌐 **HTTP Client**: Built-in HTTP client with request/response interceptors
+- 📚 **Well Documented**: Extensive documentation and examples
+
+## Installation
+
+```bash
+npm install limits-sdk
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/coinrule-v2/dev/common/limits-sdk.git
-git branch -M main
-git push -uf origin main
+
+## Quick Start
+
+```typescript
+import { LimitsSDK } from 'limits-sdk';
+
+// Initialize the SDK
+const sdk = new LimitsSDK({
+  baseURL: 'https://api.your-platform.com',
+  timeout: 30000,
+  headers: {
+    'Authorization': 'Bearer your-token', // if required
+  },
+});
+
+// Create a market buy order
+const result = await sdk.createOrder({
+  userAddress: '0x1234567890123456789012345678901234567890',
+  coin: 'BTC',
+  is_buy: true,
+  sz: 1.0,
+  reduce_only: false,
+});
 ```
+
+## API Reference
+
+### Trading Operations
+
+#### Create Order
+
+```typescript
+const orderResult = await sdk.createOrder({
+  userAddress: '0x...',
+  coin: 'BTC',
+  is_buy: true,
+  sz: 1.0,
+  reduce_only: false,
+  limit_px: 50000,
+  order_type: {
+    limit: { tif: 'Gtc' }
+  }
+});
+```
+
+#### Batch Orders
+
+```typescript
+const batchResult = await sdk.createBatchOrders({
+  orders: [
+    {
+      userAddress: '0x...',
+      coin: 'BTC',
+      is_buy: true,
+      sz: 1.0,
+      reduce_only: false,
+    },
+    {
+      userAddress: '0x...',
+      coin: 'ETH',
+      is_buy: false,
+      sz: 2.0,
+      reduce_only: false,
+    }
+  ]
+});
+```
+
+#### Update Leverage
+
+```typescript
+const leverageResult = await sdk.updateLeverage({
+  userAddress: '0x...',
+  coin: 'BTC',
+  leverage: 10,
+  leverageType: 'cross'
+});
+```
+
+#### TWAP Orders
+
+```typescript
+const twapResult = await sdk.createTwapOrder({
+  userAddress: '0x...',
+  token: 'BTC',
+  size: '1.0',
+  frequency: '5',   // 5 minutes
+  runtime: '60',    // 60 minutes total
+  randomize: true,
+  isBuy: true,
+  threshold: 0.01,
+});
+```
+
+### Account Management
+
+#### Connect User
+
+```typescript
+const connectResult = await sdk.connectUser({
+  userAddress: '0x...',
+  devicePublicKey: 'your-device-public-key',
+});
+```
+
+#### Verify Device
+
+```typescript
+const verifyResult = await sdk.verifyDevice({
+  signature: 'signature-string',
+  nonce: 'nonce-string',
+  agentAddress: '0x...',
+  userAddress: '0x...',
+  chainId: 1,
+});
+```
+
+#### Verify Keys
+
+```typescript
+const keyVerifyResult = await sdk.verifyKeys({
+  userAddress: '0x...',
+  agentAddress: '0x...',
+});
+```
+
+#### Verify Invite Code
+
+```typescript
+const codeVerifyResult = await sdk.verifyCode({
+  userAddress: '0x...',
+  inviteCode: 'invite-code',
+});
+```
+
+## Types
+
+The SDK exports all types used in the API:
+
+```typescript
+import {
+  OrderRequest,
+  TwapRequest,
+  LeverageRequest,
+  ConnectUserRequest,
+  VerifyDeviceRequest,
+  OrderType,
+  Grouping,
+  SDKError,
+} from 'limits-sdk';
+```
+
+## Error Handling
+
+The SDK provides detailed error information:
+
+```typescript
+import { SDKError } from 'limits-sdk';
+
+try {
+  const result = await sdk.createOrder(orderRequest);
+} catch (error) {
+  if (error instanceof Error) {
+    const sdkError = error as SDKError;
+    
+    console.error('Error:', sdkError.message);
+    console.error('Code:', sdkError.code);
+    console.error('Status:', sdkError.status);
+    console.error('Response:', sdkError.response);
+  }
+}
+```
+
+## Configuration
+
+```typescript
+interface LimitsSDKConfig {
+  baseURL: string;
+  timeout?: number;
+  headers?: Record<string, string>;
+}
+
+const sdk = new LimitsSDK({
+  baseURL: 'https://api.your-platform.com',
+  timeout: 30000, // 30 seconds
+  headers: {
+    'Authorization': 'Bearer your-token',
+    'X-API-Key': 'your-api-key',
+  },
+});
+```
+
+## Examples
+
+Check out the [examples](./examples) directory for more detailed usage examples:
+
+- [Basic Usage](./examples/basic-usage.ts) - Simple trading operations
+- [README Examples](./examples/README.md) - Comprehensive examples with explanations
+
+## API Endpoints
+
+The SDK covers all the main API endpoints:
+
+- `POST /order` - Create single order
+- `POST /batchOrder` - Create batch orders
+- `POST /leverage` - Update leverage
+- `POST /twap` - Create TWAP order
+- `POST /connect` - Connect user
+- `PUT /connect` - Verify keys
+- `POST /verifyDevice` - Verify device
+- `POST /verifyCode` - Verify invite code
+
+## Development
+
+### Building
+
+```bash
+npm run build
+```
+
+### Testing
+
+```bash
+npm test
+npm run test:watch
+```
+
+### Linting
+
+```bash
+npm run lint
+npm run lint:fix
+```
+
+### Type Checking
+
+```bash
+npm run typecheck
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Support
+
+For support, please contact the development team or create an issue in the repository.
 
 ## Integrate with your tools
 
