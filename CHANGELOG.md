@@ -9,8 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Initial SDK implementation
-- Trading operations (create order, batch orders, leverage, TWAP)
-- Account management (connect, verify device, verify keys, verify code)
+- Trading operations (create order,leverage)
+- Account management (connectUser, verify device, verifyUser)
 - Comprehensive TypeScript types
 - HTTP client with error handling
 - Utility methods for common operations

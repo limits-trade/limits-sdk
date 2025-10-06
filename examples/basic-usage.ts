@@ -1,159 +1,178 @@
 import { LimitsSDK } from '../src';
+import { ethers } from 'ethers';
+// Initialize the SDK with default localhost configuration
+const sdk = new LimitsSDK();
 
-// Initialize the SDK
-const sdk = new LimitsSDK({
-  baseURL: 'https://api.your-platform.com',
-  timeout: 30000,
-  headers: {
-    'Authorization': 'Bearer your-jwt-token', // if required
-  },
-});
+// Or initialize with custom configuration
+// const sdk = new LimitsSDK({
+//   baseURL: 'https://api.your-platform.com',
+//   timeout: 30000,
+//   headers: {
+//     'Authorization': 'Bearer your-jwt-token', // if required
+//   },
+// });
 
 async function basicTradingExample(): Promise<void> {
-  const userAddress = '0x1234567890123456789012345678901234567890';
+    const userAddress = '0x1234567890123456789012345678901234567890';
+    const devicePk = 'your-device-private-key';
+    const user = new ethers.Wallet(devicePk);
 
-  try {
-    console.log('🚀 Starting basic trading example...\n');
+    try {
+        console.log('🚀 Starting basic trading example...\n');
 
-    // 1. Connect user first
-    console.log('📱 Connecting user...');
-    const connectionResult = await sdk.connectUser({
-      userAddress,
-      devicePublicKey: 'your-device-public-key',
-    });
-    console.log('✅ User connected:', connectionResult);
-    console.log();
+        // 1. Connect user first
+        console.log('📱 Connecting user...');
+        const connectionResult = await sdk.connectUser({
+            userAddress,
+            devicePublicKey: 'your-device-public-key',
+        });
+        console.log('✅ User connected:', connectionResult);
+        console.log();
 
-    // 2. Set leverage
-    console.log('⚖️ Setting cross leverage to 10x for BTC...');
-    const leverageResult = await sdk.updateLeverage({
-      userAddress,
-      coin: 'BTC',
-      leverage: 10,
-      leverageType: 'cross',
-    });
-    console.log('✅ Leverage set:', leverageResult);
-    console.log();
+        // 2. Set leverage
+        console.log('⚖️ Setting cross leverage to 10x for BTC...');
+        const leverageResult = await sdk.updateLeverage({
+            userAddress,
+            coin: 'BTC',
+            leverage: 10,
+            leverageType: 'cross',
+        });
+        console.log('✅ Leverage set:', leverageResult);
+        console.log();
 
-    // 3. Create a market buy order
-    console.log('💰 Creating market buy order for 0.1 BTC...');
-    const marketBuyResult = await sdk.createOrder({
-      userAddress,
-      coin: 'BTC',
-      is_buy: true,
-      sz: 0.1,
-      reduce_only: false,
-    });
-    console.log('✅ Market buy order created:', marketBuyResult);
-    console.log();
+        // 3. Create an order
+        console.log('💰 Creating buy order for 0.1 BTC...');
+        const nonce = Date.now().toString();
 
-    // 4. Create a limit sell order
-    console.log('📈 Creating limit sell order for 0.05 BTC at $55,000...');
-    const limitSellResult = await sdk.createOrder({
-      userAddress,
-      coin: 'BTC',
-      is_buy: false,
-      sz: 0.05,
-      limit_px: 55000,
-      reduce_only: false,
-      order_type: {
-        limit: { tif: 'Gtc' },
-      },
-    });
-    console.log('✅ Limit sell order created:', limitSellResult);
-    console.log();
+        const domain = {
+            name: 'LimitsTrade',
+            version: '1',
+            chainId: 1,
+        };
 
-    // 5. Create a TWAP order
-    console.log('🔄 Creating TWAP order for 1 BTC over 60 minutes...');
-    const twapResult = await sdk.createTwapOrder({
-      userAddress,
-      token: 'BTC',
-      size: '1.0',
-      frequency: '5',   // Execute every 5 minutes
-      runtime: '60',    // Run for 60 minutes total
-      randomize: true,  // Add randomization to timing
-      isBuy: true,
-      threshold: 0.01,  // 1% threshold
-    });
-    console.log('✅ TWAP order created:', twapResult);
-    console.log();
+        const types = {
+            VerifyOrder: [
+                { name: 'nonce', type: 'string' },
+                { name: 'coin', type: 'string' },
+                { name: 'isBuy', type: 'bool' },
+                { name: 'reduceOnly', type: 'bool' },
+                { name: 'userAddress', type: 'string' },
+            ],
+        };
 
-    console.log('🎉 All operations completed successfully!');
+        const message = {
+            nonce,
+            coin: 'BTC',
+            isBuy: true,
+            reduceOnly: false,
+            userAddress,
+        };
 
-  } catch (error) {
-    console.error('❌ Error occurred:', error);
-    
-    // Type-safe error handling
-    if (error instanceof Error) {
-      const sdkError = error as any;
-      if (sdkError.status) {
-        console.error(`HTTP Status: ${sdkError.status}`);
-      }
-      if (sdkError.response) {
-        console.error('Response data:', sdkError.response);
-      }
+        const signature = await user.signTypedData(domain, types, message);
+        const sig = ethers.Signature.from(signature);
+        const { r, s, v } = sig;
+
+        const orderResult = await sdk.createOrder({
+            userAddress,
+            coin: 'BTC',
+            is_buy: true,
+            sz: 0.1,
+            reduce_only: false,
+            nonce: Date.now().toString(),
+            r,
+            s,
+            v,
+            chainId: 1,
+            threshold: 0.01,
+        });
+        console.log('✅ Order created:', orderResult);
+        console.log();
+
+        // 4. Verify user keys
+        console.log('� Verifying user keys...');
+        const verifyResult = await sdk.verifyUser({
+            userAddress,
+            agentAddress: '0x9876543210987654321098765432109876543210',
+            nonce: Date.now().toString(),
+            r: '0xabc123def456789abc123def456789abc123def456789abc123def456789abc123',
+            s: '0xdef456abc789123def456abc789123def456abc789123def456abc789123def456',
+            v: 27,
+            chainId: 1,
+        });
+        console.log('✅ User keys verified:', verifyResult);
+        console.log();
+
+        // 5. Verify device
+        console.log('� Verifying device...');
+        const deviceResult = await sdk.verifyDevice({
+            signature: '0xdevicesignature123',
+            nonce: Date.now().toString(),
+            agentAddress: '0x9876543210987654321098765432109876543210',
+            userAddress,
+            chainId: 1,
+        });
+        console.log('✅ Device verified:', deviceResult);
+        console.log();
+
+        console.log('🎉 All operations completed successfully!');
+
+    } catch (error) {
+        console.error('❌ Error occurred:', error);
+
+        // Type-safe error handling
+        if (error instanceof Error) {
+            const sdkError = error as any;
+            if (sdkError.status) {
+                console.error(`HTTP Status: ${sdkError.status}`);
+            }
+            if (sdkError.response) {
+                console.error('Response data:', sdkError.response);
+            }
+        }
     }
-  }
 }
 
-async function batchTradingExample(): Promise<void> {
-  const userAddress = '0x1234567890123456789012345678901234567890';
+async function leverageManagementExample(): Promise<void> {
+    const userAddress = '0x1234567890123456789012345678901234567890';
 
-  try {
-    console.log('🚀 Starting batch trading example...\n');
+    try {
+        console.log('🚀 Starting leverage management example...\n');
 
-    // Create multiple orders in a single batch
-    console.log('📦 Creating batch orders...');
-    const batchResult = await sdk.createBatchOrders({
-      orders: [
-        {
-          userAddress,
-          coin: 'BTC',
-          is_buy: true,
-          sz: 0.1,
-          reduce_only: false,
-        },
-        {
-          userAddress,
-          coin: 'ETH',
-          is_buy: true,
-          sz: 2.0,
-          reduce_only: false,
-          limit_px: 3000,
-          order_type: {
-            limit: { tif: 'Gtc' },
-          },
-        },
-        {
-          userAddress,
-          coin: 'SOL',
-          is_buy: false,
-          sz: 10,
-          reduce_only: true, // Close existing position
-        },
-      ],
-    });
+        // Set cross leverage for multiple coins
+        const coins = ['BTC', 'ETH', 'SOL'];
+        const leverages = [10, 15, 20];
 
-    console.log('✅ Batch orders result:', batchResult);
-    console.log(`📊 Summary: ${batchResult.data?.successful}/${batchResult.data?.total} orders successful`);
-    
-    if (batchResult.data?.errors && batchResult.data.errors.length > 0) {
-      console.log('⚠️ Failed orders:');
-      batchResult.data.errors.forEach((error, index) => {
-        console.log(`  Order ${error.index}: ${error.error}`);
-      });
+        for (let i = 0; i < coins.length; i++) {
+            console.log(`⚖️ Setting ${leverages[i]}x cross leverage for ${coins[i]}...`);
+            const result = await sdk.updateLeverage({
+                userAddress,
+                coin: coins[i],
+                leverage: leverages[i],
+                leverageType: 'cross',
+            });
+            console.log(`✅ ${coins[i]} leverage set:`, result);
+        }
+
+        // Set isolated leverage for specific trading
+        console.log('🎯 Setting 25x isolated leverage for BTC...');
+        const isolatedResult = await sdk.updateLeverage({
+            userAddress,
+            coin: 'BTC',
+            leverage: 25,
+            leverageType: 'isolated',
+        });
+        console.log('✅ Isolated leverage set:', isolatedResult);
+
+    } catch (error) {
+        console.error('❌ Leverage management error:', error);
     }
-
-  } catch (error) {
-    console.error('❌ Batch trading error:', error);
-  }
 }
 
 // Run examples
 if (require.main === module) {
-  (async () => {
-    await basicTradingExample();
-    console.log('\n' + '='.repeat(50) + '\n');
-    await batchTradingExample();
-  })();
+    (async () => {
+        await basicTradingExample();
+        console.log('\n' + '='.repeat(50) + '\n');
+        await leverageManagementExample();
+    })();
 }

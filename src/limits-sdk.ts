@@ -1,30 +1,30 @@
 import { HttpClient } from './http-client';
 import {
   LimitsSDKConfig,
-  OrderRequest,
   OrderResponse,
-  BatchOrderRequest,
-  BatchOrderResponse,
   LeverageRequest,
   LeverageResponse,
-  TwapRequest,
-  TwapResponse,
   ConnectUserRequest,
   ConnectUserResponse,
   VerifyDeviceRequest,
   VerifyDeviceResponse,
   VerifyKeysRequest,
   VerifyKeysResponse,
-  VerifyCodeRequest,
-  VerifyCodeResponse,
   ApiResponse,
+  LimitsOrderRequest,
 } from './types';
 
 export class LimitsSDK {
   private httpClient: HttpClient;
 
-  constructor(config: LimitsSDKConfig) {
-    this.httpClient = new HttpClient(config);
+  constructor(config: LimitsSDKConfig = {}) {
+    const defaultConfig: LimitsSDKConfig = {
+      baseURL: 'http://localhost:3001/dmp',
+      timeout: 30000,
+      ...config,
+    };
+    
+    this.httpClient = new HttpClient(defaultConfig);
   }
 
   // Trading Methods
@@ -34,17 +34,8 @@ export class LimitsSDK {
    * @param orderRequest - The order details
    * @returns Promise with order response
    */
-  async createOrder(orderRequest: OrderRequest): Promise<OrderResponse> {
+  async createOrder(orderRequest: LimitsOrderRequest): Promise<OrderResponse> {
     return this.httpClient.post<OrderResponse>('/order', orderRequest);
-  }
-
-  /**
-   * Create multiple orders in a batch
-   * @param batchRequest - Array of orders to create
-   * @returns Promise with batch order response
-   */
-  async createBatchOrders(batchRequest: BatchOrderRequest): Promise<BatchOrderResponse> {
-    return this.httpClient.post<BatchOrderResponse>('/batchOrder', batchRequest);
   }
 
   /**
@@ -54,15 +45,6 @@ export class LimitsSDK {
    */
   async updateLeverage(leverageRequest: LeverageRequest): Promise<LeverageResponse> {
     return this.httpClient.post<LeverageResponse>('/leverage', leverageRequest);
-  }
-
-  /**
-   * Create a TWAP (Time-Weighted Average Price) order
-   * @param twapRequest - The TWAP order details
-   * @returns Promise with TWAP response
-   */
-  async createTwapOrder(twapRequest: TwapRequest): Promise<TwapResponse> {
-    return this.httpClient.post<TwapResponse>('/twap', twapRequest);
   }
 
   // Account Connection and Verification Methods
@@ -82,7 +64,7 @@ export class LimitsSDK {
    * @param verifyRequest - Key verification details
    * @returns Promise with verification response
    */
-  async verifyKeys(verifyRequest: VerifyKeysRequest): Promise<VerifyKeysResponse> {
+  async verifyUser(verifyRequest: VerifyKeysRequest): Promise<VerifyKeysResponse> {
     const response = await this.httpClient.put<ApiResponse<VerifyKeysResponse>>('/connect', verifyRequest);
     return response.data as VerifyKeysResponse;
   }
@@ -95,15 +77,5 @@ export class LimitsSDK {
   async verifyDevice(verifyRequest: VerifyDeviceRequest): Promise<VerifyDeviceResponse> {
     const response = await this.httpClient.post<ApiResponse<VerifyDeviceResponse>>('/verifyDevice', verifyRequest);
     return response.data as VerifyDeviceResponse;
-  }
-
-  /**
-   * Verify an invite code
-   * @param verifyRequest - Code verification details
-   * @returns Promise with code verification response
-   */
-  async verifyCode(verifyRequest: VerifyCodeRequest): Promise<VerifyCodeResponse> {
-    const response = await this.httpClient.post<ApiResponse<VerifyCodeResponse>>('/verifyCode', verifyRequest);
-    return response.data as VerifyCodeResponse;
   }
 }

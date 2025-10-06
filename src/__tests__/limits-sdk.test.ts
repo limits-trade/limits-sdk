@@ -26,6 +26,11 @@ describe('LimitsSDK', () => {
           is_buy: true,
           sz: 1,
           reduce_only: false,
+          nonce: '123456',
+          r: '0xabc',
+          s: '0xdef',
+          v: 27,
+          chainId: 1,
         };
 
         const mockResponse = {
@@ -39,48 +44,6 @@ describe('LimitsSDK', () => {
         const result = await sdk.createOrder(orderRequest);
 
         expect(mockHttpClient.post).toHaveBeenCalledWith('/order', orderRequest);
-        expect(result).toEqual(mockResponse);
-      });
-    });
-
-    describe('createBatchOrders', () => {
-      it('should create multiple orders', async () => {
-        const batchRequest = {
-          orders: [
-            {
-              userAddress: '0x123',
-              coin: 'BTC',
-              is_buy: true,
-              sz: 1,
-              reduce_only: false,
-            },
-            {
-              userAddress: '0x456',
-              coin: 'ETH',
-              is_buy: false,
-              sz: 2,
-              reduce_only: false,
-            },
-          ],
-        };
-
-        const mockResponse = {
-          success: true,
-          message: 'Batch orders created successfully',
-          data: {
-            total: 2,
-            successful: 2,
-            failed: 0,
-            results: [],
-            errors: [],
-          },
-        };
-
-        mockHttpClient.post.mockResolvedValue(mockResponse);
-
-        const result = await sdk.createBatchOrders(batchRequest);
-
-        expect(mockHttpClient.post).toHaveBeenCalledWith('/batchOrder', batchRequest);
         expect(result).toEqual(mockResponse);
       });
     });
@@ -108,37 +71,9 @@ describe('LimitsSDK', () => {
         expect(result).toEqual(mockResponse);
       });
     });
-
-    describe('createTwapOrder', () => {
-      it('should create a TWAP order', async () => {
-        const twapRequest = {
-          userAddress: '0x123',
-          token: 'BTC',
-          size: '1.0',
-          frequency: '5',
-          runtime: '60',
-          randomize: true,
-          isBuy: true,
-          threshold: 0.01,
-        };
-
-        const mockResponse = {
-          success: true,
-          message: 'TWAP order created successfully',
-          data: { twapId: 'twap123' },
-        };
-
-        mockHttpClient.post.mockResolvedValue(mockResponse);
-
-        const result = await sdk.createTwapOrder(twapRequest);
-
-        expect(mockHttpClient.post).toHaveBeenCalledWith('/twap', twapRequest);
-        expect(result).toEqual(mockResponse);
-      });
-    });
   });
 
-  describe('Connection Methods', () => {
+  describe('Connection and Verification Methods', () => {
     describe('connectUser', () => {
       it('should connect a user', async () => {
         const connectRequest = {
@@ -164,11 +99,16 @@ describe('LimitsSDK', () => {
       });
     });
 
-    describe('verifyKeys', () => {
-      it('should verify keys', async () => {
+    describe('verifyUser', () => {
+      it('should verify user keys', async () => {
         const verifyRequest = {
           userAddress: '0x123',
           agentAddress: '0x456',
+          nonce: '789',
+          r: '0xabc',
+          s: '0xdef',
+          v: 27,
+          chainId: 1,
         };
 
         const mockResponse = {
@@ -183,12 +123,39 @@ describe('LimitsSDK', () => {
 
         mockHttpClient.put.mockResolvedValue(mockResponse);
 
-        const result = await sdk.verifyKeys(verifyRequest);
+        const result = await sdk.verifyUser(verifyRequest);
 
         expect(mockHttpClient.put).toHaveBeenCalledWith('/connect', verifyRequest);
         expect(result).toEqual(mockResponse.data);
       });
     });
-  });
 
+    describe('verifyDevice', () => {
+      it('should verify a device', async () => {
+        const verifyRequest = {
+          signature: '0xsignature',
+          nonce: '789',
+          agentAddress: '0x456',
+          userAddress: '0x123',
+          chainId: 1,
+        };
+
+        const mockResponse = {
+          success: true,
+          message: 'Device verified successfully',
+          data: {
+            verified: true,
+            userAddress: '0x123',
+          },
+        };
+
+        mockHttpClient.post.mockResolvedValue(mockResponse);
+
+        const result = await sdk.verifyDevice(verifyRequest);
+
+        expect(mockHttpClient.post).toHaveBeenCalledWith('/verifyDevice', verifyRequest);
+        expect(result).toEqual(mockResponse.data);
+      });
+    });
+  });
 });

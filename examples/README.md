@@ -16,6 +16,31 @@ const sdk = new LimitsSDK({
   },
 });
 
+// Example: Create Order
+async function createOrder() {
+  try {
+    const result = await sdk.createOrder({
+      userAddress: '0x1234567890123456789012345678901234567890',
+      coin: 'BTC',
+      is_buy: true,
+      sz: 1.0,
+      reduce_only: false,
+      nonce: '123456',
+      r: '0xabc123',
+      s: '0xdef456',
+      v: 27,
+      chainId: 1,
+      orderId: 'optional-order-id', // Optional
+      cloid: 'custom-client-order-id', // Optional
+      threshold: 0.01, // Optional
+    });
+    
+    console.log('Order created:', result);
+  } catch (error) {
+    console.error('Error creating order:', error);
+  }
+}
+
 // Example: Update leverage
 async function updateLeverage() {
   try {
@@ -24,31 +49,12 @@ async function updateLeverage() {
       coin: 'BTC',
       leverage: 10,
       leverageType: 'cross',
+      privateKey: 'optional-private-key', // Optional
     });
     
     console.log('Leverage updated:', result);
   } catch (error) {
     console.error('Error updating leverage:', error);
-  }
-}
-
-// Example: Create TWAP order
-async function createTwapOrder() {
-  try {
-    const result = await sdk.createTwapOrder({
-      userAddress: '0x1234567890123456789012345678901234567890',
-      token: 'BTC',
-      size: '1.0',
-      frequency: '5',   // 5 minutes
-      runtime: '60',    // 60 minutes total
-      randomize: true,
-      isBuy: true,
-      threshold: 0.01,
-    });
-    
-    console.log('TWAP order created:', result);
-  } catch (error) {
-    console.error('Error creating TWAP order:', error);
   }
 }
 
@@ -65,42 +71,40 @@ async function connectUser() {
     console.error('Error connecting user:', error);
   }
 }
-```
 
-## Batch Operations
-
-```typescript
-// Example: Create multiple orders at once
-async function createBatchOrders() {
+// Example: Verify user keys
+async function verifyUser() {
   try {
-    const result = await sdk.createBatchOrders({
-      orders: [
-        {
-          userAddress: '0x1234567890123456789012345678901234567890',
-          coin: 'BTC',
-          is_buy: true,
-          sz: 1.0,
-          reduce_only: false,
-        },
-        {
-          userAddress: '0x1234567890123456789012345678901234567890',
-          coin: 'ETH',
-          is_buy: false,
-          sz: 2.5,
-          reduce_only: false,
-          limit_px: 3000,
-          order_type: {
-            limit: { tif: 'Gtc' },
-          },
-        },
-      ],
+    const result = await sdk.verifyUser({
+      userAddress: '0x1234567890123456789012345678901234567890',
+      agentAddress: '0x9876543210987654321098765432109876543210',
+      nonce: '789012',
+      r: '0xabc789',
+      s: '0xdef012',
+      v: 28,
+      chainId: 1,
     });
     
-    console.log('Batch orders result:', result);
-    console.log(`Successful orders: ${result.data?.successful}`);
-    console.log(`Failed orders: ${result.data?.failed}`);
+    console.log('User verified:', result);
   } catch (error) {
-    console.error('Error creating batch orders:', error);
+    console.error('Error verifying user:', error);
+  }
+}
+
+// Example: Verify device
+async function verifyDevice() {
+  try {
+    const result = await sdk.verifyDevice({
+      signature: '0xsignature123',
+      nonce: '345678',
+      agentAddress: '0x9876543210987654321098765432109876543210',
+      userAddress: '0x1234567890123456789012345678901234567890',
+      chainId: 1, // Optional
+    });
+    
+    console.log('Device verified:', result);
+  } catch (error) {
+    console.error('Error verifying device:', error);
   }
 }
 ```
@@ -118,6 +122,11 @@ async function handleErrors() {
       is_buy: true,
       sz: 1.0,
       reduce_only: false,
+      nonce: '123456',
+      r: '0xabc123',
+      s: '0xdef456',
+      v: 27,
+      chainId: 1,
     });
     
     console.log('Order created successfully:', result);
@@ -148,37 +157,28 @@ async function handleErrors() {
 
 ```typescript
 import { 
-  OrderRequest, 
-  TwapRequest, 
+  LimitsOrderRequest, 
   LeverageRequest,
-  OrderType,
-  Grouping 
+  ConnectUserRequest,
+  VerifyDeviceRequest,
+  VerifyKeysRequest,
 } from 'limits-sdk';
 
 // Example of using types for better development experience
-const orderRequest: OrderRequest = {
+const orderRequest: LimitsOrderRequest = {
   userAddress: '0x1234567890123456789012345678901234567890',
   coin: 'BTC',
   is_buy: true,
   sz: 1.0,
   reduce_only: false,
-  limit_px: 50000,
-  order_type: {
-    limit: { tif: 'Gtc' }
-  } as OrderType,
-  grouping: 'na' as Grouping,
-  cloid: 'my-custom-order-id',
-};
-
-const twapRequest: TwapRequest = {
-  userAddress: '0x1234567890123456789012345678901234567890',
-  token: 'BTC',
-  size: '1.0',
-  frequency: '5',
-  runtime: '60',
-  randomize: true,
-  isBuy: true,
-  threshold: 0.01,
+  nonce: '123456',
+  r: '0xabc123',
+  s: '0xdef456',
+  v: 27,
+  chainId: 1,
+  orderId: 'my-order-id', // Optional
+  cloid: 'my-custom-order-id', // Optional
+  threshold: 0.01, // Optional
 };
 
 const leverageRequest: LeverageRequest = {
@@ -186,5 +186,29 @@ const leverageRequest: LeverageRequest = {
   coin: 'BTC',
   leverage: 10,
   leverageType: 'cross',
+  privateKey: 'optional-private-key', // Optional
+};
+
+const connectRequest: ConnectUserRequest = {
+  userAddress: '0x1234567890123456789012345678901234567890',
+  devicePublicKey: 'device-public-key',
+};
+
+const verifyKeysRequest: VerifyKeysRequest = {
+  userAddress: '0x1234567890123456789012345678901234567890',
+  agentAddress: '0x9876543210987654321098765432109876543210',
+  nonce: '789012',
+  r: '0xabc789',
+  s: '0xdef012',
+  v: 28,
+  chainId: 1,
+};
+
+const verifyDeviceRequest: VerifyDeviceRequest = {
+  signature: '0xsignature123',
+  nonce: '345678',
+  agentAddress: '0x9876543210987654321098765432109876543210',
+  userAddress: '0x1234567890123456789012345678901234567890',
+  chainId: 1, // Optional
 };
 ```
