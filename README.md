@@ -20,39 +20,71 @@ npm install limits-sdk
 
 ```typescript
 import { LimitsSDK } from 'limits-sdk';
+import { ethers } from 'ethers';
 
 // Initialize the SDK with default configuration
 const sdk = new LimitsSDK();
 
-// Prepare order data
-const orderData = {
-  userAddress: '0x1234567890123456789012345678901234567890',
-  coin: 'BTC',
-  is_buy: true,
-  sz: 1.0,
-  reduce_only: false,
-  nonce: 123456,
-  chainId: 1,
-};
+// Setup your device wallet
+const devicePrivateKey = 'your-device-private-key';
+const device = new ethers.Wallet(devicePrivateKey);
 
-// Generate EIP-712 signature data using the SDK helper
-const signatureData = sdk.generateSignatureData('createOrder', orderData);
+async function quickStart() {
+  const userAddress = '0x1234567890123456789012345678901234567890';
+  
+  // Step 1: Connect user
+  const connectionResult = await sdk.connectUser({
+    userAddress,
+    devicePublicKey: device.publicKey,
+  });
+  
+  // Step 2: Verify user keys (required before trading)
+  const verifyResult = await sdk.verifyUser({
+    userAddress,
+    agentAddress: '0x9876543210987654321098765432109876543210',
+    nonce: Date.now(),
+    r: '0xabc123...', // From approveAgent signature
+    s: '0xdef456...', // From approveAgent signature
+    v: 27,
+    chainId: 1,
+  });
 
-// Sign the typed data with your device private key to get r, s, v values
-const signature = await wallet.signTypedData(
-  signatureData.domain,
-  signatureData.types,
-  signatureData.message
-);
-const { r, s, v } = ethers.utils.splitSignature(signature);
+  // Step 3: Create an order
+  const orderNonce = Date.now();
+  
+  // Generate EIP-712 signature data using the SDK helper
+  const signatureData = sdk.generateSignatureData({
+    userAddress,
+    coin: 'BTC',
+    nonce: orderNonce,
+    chainId: 1,
+    signatureType: 'createOrder',
+    isBuy: true,
+    reduceOnly: false,
+  });
 
-// Create an order
-const result = await sdk.createOrder({
-  ...orderData,
-  r,
-  s,
-  v,
-});
+  // Sign the typed data with your device private key to get r, s, v values
+  const signature = await device.signTypedData(
+    signatureData.domain,
+    signatureData.types,
+    signatureData.message
+  );
+  const { r, s, v } = ethers.Signature.from(signature);
+
+  // Create the order
+  const result = await sdk.createOrder({
+    userAddress,
+    coin: 'BTC',
+    is_buy: true,
+    sz: 1.0,
+    reduce_only: false,
+    nonce: orderNonce.toString(),
+    r,
+    s,
+    v,
+    chainId: 1,
+  });
+}
 ```
 
 ## API Reference
@@ -93,8 +125,12 @@ const leverageResult = await sdk.updateLeverage({
   userAddress: '0x...',
   coin: 'BTC',
   leverage: 10,
-  leverageType: 'cross', // 'cross' or 'isolated'
-  privateKey: 'optional-private-key', // Optional
+  isCross: true,
+  nonce
+  r: '',
+  s: '',
+  v: 27
+  chainId: 1
 });
 ```
 
