@@ -122,7 +122,7 @@ export interface SignatureData {
 
 export interface GenerateSignatureRequest {
     userAddress: string;
-    coin: string;
+    coin?: string;
     nonce: number;
     chainId: number;
     signatureType: SignatureType;

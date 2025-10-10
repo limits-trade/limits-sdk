@@ -31,7 +31,7 @@ const orderData = {
   is_buy: true,
   sz: 1.0,
   reduce_only: false,
-  nonce: '123456',
+  nonce: 123456,
   chainId: 1,
 };
 
@@ -75,7 +75,7 @@ const orderResult = await sdk.createOrder({
   is_buy: true,
   sz: 1.0,
   reduce_only: false,
-  nonce: '123456',
+  nonce: 123456,
   r: r, // From EIP-712 signature above
   s: s, // From EIP-712 signature above
   v: v, // From EIP-712 signature above
@@ -117,7 +117,7 @@ const connectResult = await sdk.connectUser({
 const verifyResult = await sdk.verifyUser({
   userAddress: '0x...',
   agentAddress: '0x...',
-  nonce: 'nonce-string',
+  nonce: number,
   r: '0xabc', // From approveAgent signature
   s: '0xdef', // From approveAgent signature
   v: 27,      // From approveAgent signature
@@ -127,13 +127,15 @@ const verifyResult = await sdk.verifyUser({
 
 #### Verify Device
 
+This endpoint exists to make sure that the user device key matches the device key stored on our side.
+
 ```typescript
 const deviceVerifyResult = await sdk.verifyDevice({
   signature: 'signature-string',
-  nonce: 'nonce-string',
+  nonce: number,
   agentAddress: '0x...',
   userAddress: '0x...',
-  chainId: 1, // Optional
+  chainId: 1,
 });
 ```
 
@@ -146,7 +148,7 @@ The SDK provides a helper method to generate EIP-712 signature data for differen
 ```typescript
 // For create order requests
 const orderData = {
-  nonce: '123456',
+  nonce: 123456,
   coin: 'BTC',
   is_buy: true,
   reduce_only: false,
@@ -236,15 +238,7 @@ interface LimitsSDKConfig {
 // Default configuration
 const sdk = new LimitsSDK();
 
-// Custom configuration
-const sdk = new LimitsSDK({
-  baseURL: 'https://api.your-platform.com',
-  timeout: 30000, // 30 seconds
-  headers: {
-    'Authorization': 'Bearer your-token',
-    'X-API-Key': 'your-api-key',
-  },
-});
+
 ```
 
 ## Examples

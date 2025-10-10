@@ -1,21 +1,13 @@
 import { LimitsSDK } from '../src';
 import { ethers } from 'ethers';
+
 // Initialize the SDK with default localhost configuration
 const sdk = new LimitsSDK();
-
-// Or initialize with custom configuration
-// const sdk = new LimitsSDK({
-//   baseURL: 'https://api.your-platform.com',
-//   timeout: 30000,
-//   headers: {
-//     'Authorization': 'Bearer your-jwt-token', // if required
-//   },
-// });
 
 async function basicTradingExample(): Promise<void> {
     const userAddress = '0x1234567890123456789012345678901234567890';
     const devicePk = 'your-device-private-key';
-    const user = new ethers.Wallet(devicePk);
+    const device = new ethers.Wallet(devicePk);
 
     try {
         console.log('🚀 Starting basic trading example...\n');
@@ -29,71 +21,12 @@ async function basicTradingExample(): Promise<void> {
         console.log('✅ User connected:', connectionResult);
         console.log();
 
-        // 2. Set leverage
-        console.log('⚖️ Setting cross leverage to 10x for BTC...');
-        const leverageResult = await sdk.updateLeverage({
-            userAddress,
-            coin: 'BTC',
-            leverage: 10,
-            isCross: true,
-        });
-        console.log('✅ Leverage set:', leverageResult);
-        console.log();
-
-        // 3. Create an order
-        console.log('💰 Creating buy order for 0.1 BTC...');
-        const nonce = Date.now();
-
-        const domain = {
-            name: 'LimitsTrade',
-            version: '1',
-            chainId: 1,
-        };
-
-        const types = {
-            VerifyOrder: [
-                { name: 'nonce', type: 'unit64' },
-                { name: 'coin', type: 'string' },
-                { name: 'isBuy', type: 'bool' },
-                { name: 'reduceOnly', type: 'bool' },
-                { name: 'userAddress', type: 'string' },
-            ],
-        };
-
-        const message = {
-            nonce,
-            coin: 'BTC',
-            isBuy: true,
-            reduceOnly: false,
-            userAddress,
-        };
-
-        const signature = await user.signTypedData(domain, types, message);
-        const sig = ethers.Signature.from(signature);
-        const { r, s, v } = sig;
-
-        const orderResult = await sdk.createOrder({
-            userAddress,
-            coin: 'BTC',
-            is_buy: true,
-            sz: 0.1,
-            reduce_only: false,
-            nonce: Date.now().toString(),
-            r,
-            s,
-            v,
-            chainId: 1,
-            threshold: 0.01,
-        });
-        console.log('✅ Order created:', orderResult);
-        console.log();
-
-        // 4. Verify user keys
-        console.log('� Verifying user keys...');
+        // 2. Verify user keys
+        console.log('🔑 Verifying user keys...');
         const verifyResult = await sdk.verifyUser({
             userAddress,
             agentAddress: '0x9876543210987654321098765432109876543210',
-            nonce: Date.now().toString(),
+            nonce: Date.now(),
             r: '0xabc123def456789abc123def456789abc123def456789abc123def456789abc123',
             s: '0xdef456abc789123def456abc789123def456abc789123def456abc789123def456',
             v: 27,
@@ -102,12 +35,103 @@ async function basicTradingExample(): Promise<void> {
         console.log('✅ User keys verified:', verifyResult);
         console.log();
 
+        // 3. Set leverage
+        console.log('⚖️ Setting cross leverage to 10x for BTC...');
+        const leverageNonce = Date.now();
+        const leverageSignatureData = sdk.generateSignatureData({
+            userAddress,
+            coin: 'BTC',
+            nonce: leverageNonce,
+            chainId: 1,
+            signatureType: 'updateLeverage',
+            leverage: 10,
+            isCross: true,
+        });
+
+        const leverageSignature = await device.signTypedData(
+            leverageSignatureData.domain,
+            leverageSignatureData.types,
+            leverageSignatureData.message
+        );
+        const leverageSig = ethers.Signature.from(leverageSignature);
+
+        const leverageResult = await sdk.updateLeverage({
+            userAddress,
+            coin: 'BTC',
+            leverage: 10,
+            isCross: true,
+            r: leverageSig.r,
+            s: leverageSig.s,
+            v: leverageSig.v,
+            nonce: leverageNonce,
+            chainId: 1,
+        });
+        console.log('✅ Leverage set:', leverageResult);
+        console.log();
+
+        // 4. Create an order
+        console.log('💰 Creating buy order for 0.1 BTC...');
+        const orderNonce = Date.now();
+
+        const orderSignatureData = sdk.generateSignatureData({
+            userAddress,
+            coin: 'BTC',
+            nonce: orderNonce,
+            chainId: 1,
+            signatureType: 'createOrder',
+            isBuy: true,
+            reduceOnly: false,
+        });
+
+        const orderSignature = await device.signTypedData(
+            orderSignatureData.domain,
+            orderSignatureData.types,
+            orderSignatureData.message
+        );
+        const orderSig = ethers.Signature.from(orderSignature);
+
+        const orderResult = await sdk.createOrder({
+            userAddress,
+            coin: 'BTC',
+            is_buy: true,
+            sz: 0.1,
+            reduce_only: false,
+            nonce: orderNonce.toString(),
+            r: orderSig.r,
+            s: orderSig.s,
+            v: orderSig.v,
+            chainId: 1,
+            threshold: 0.01,
+        });
+        console.log('✅ Order created:', orderResult);
+        console.log();
+
         // 5. Verify device
-        console.log('� Verifying device...');
+        console.log('🔐 Verifying device...');
+        const deviceNonce = Date.now();
+        const agentAddress = '0x9876543210987654321098765432109876543210';
+
+        const deviceSignatureData = sdk.generateSignatureData({
+            userAddress,
+            agentAddress,
+            nonce: deviceNonce,
+            chainId: 1,
+            signatureType: 'verifyDevice',
+        });
+
+        const deviceSignature = await device.signTypedData(
+            deviceSignatureData.domain,
+            deviceSignatureData.types,
+            deviceSignatureData.message
+        );
+        const deviceSig = ethers.Signature.from(deviceSignature);
+
         const deviceResult = await sdk.verifyDevice({
-            signature: '0xdevicesignature123',
-            nonce: Date.now().toString(),
-            agentAddress: '0x9876543210987654321098765432109876543210',
+            r: deviceSig.r,
+            s: deviceSig.s,
+            v: deviceSig.v,
+            nonce: deviceNonce,
+            agentAddress,
             userAddress,
             chainId: 1,
         });
@@ -132,47 +156,10 @@ async function basicTradingExample(): Promise<void> {
     }
 }
 
-async function leverageManagementExample(): Promise<void> {
-    const userAddress = '0x1234567890123456789012345678901234567890';
-
-    try {
-        console.log('🚀 Starting leverage management example...\n');
-
-        // Set cross leverage for multiple coins
-        const coins = ['BTC', 'ETH', 'SOL'];
-        const leverages = [10, 15, 20];
-
-        for (let i = 0; i < coins.length; i++) {
-            console.log(`⚖️ Setting ${leverages[i]}x cross leverage for ${coins[i]}...`);
-            const result = await sdk.updateLeverage({
-                userAddress,
-                coin: coins[i],
-                leverage: leverages[i],
-                leverageType: 'cross',
-            });
-            console.log(`✅ ${coins[i]} leverage set:`, result);
-        }
-
-        // Set isolated leverage for specific trading
-        console.log('🎯 Setting 25x isolated leverage for BTC...');
-        const isolatedResult = await sdk.updateLeverage({
-            userAddress,
-            coin: 'BTC',
-            leverage: 25,
-            leverageType: 'isolated',
-        });
-        console.log('✅ Isolated leverage set:', isolatedResult);
-
-    } catch (error) {
-        console.error('❌ Leverage management error:', error);
-    }
-}
-
 // Run examples
 if (require.main === module) {
     (async () => {
         await basicTradingExample();
         console.log('\n' + '='.repeat(50) + '\n');
-        await leverageManagementExample();
     })();
 }

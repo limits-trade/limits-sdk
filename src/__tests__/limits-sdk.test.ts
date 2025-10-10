@@ -9,7 +9,7 @@ describe('LimitsSDK', () => {
   let mockHttpClient: jest.Mocked<HttpClient>;
 
   beforeEach(() => {
-    sdk = new LimitsSDK({ baseURL: 'https://api.example.com' });
+    sdk = new LimitsSDK();
     mockHttpClient = (sdk as any).httpClient;
   });
 
@@ -54,7 +54,12 @@ describe('LimitsSDK', () => {
           userAddress: '0x123',
           coin: 'BTC',
           leverage: 10,
-          leverageType: 'cross' as const,
+          isCross: true,
+          r: '0xabc',
+          s: '0xdef',
+          v: 27,
+          nonce: 789,
+          chainId: 1,
         };
 
         const mockResponse = {
@@ -104,7 +109,7 @@ describe('LimitsSDK', () => {
         const verifyRequest = {
           userAddress: '0x123',
           agentAddress: '0x456',
-          nonce: '789',
+          nonce: 789,
           r: '0xabc',
           s: '0xdef',
           v: 27,
@@ -134,10 +139,13 @@ describe('LimitsSDK', () => {
       it('should verify a device', async () => {
         const verifyRequest = {
           signature: '0xsignature',
-          nonce: '789',
+          nonce: 789,
           agentAddress: '0x456',
           userAddress: '0x123',
           chainId: 1,
+          r: '0xabc',
+          s: '0xdef',
+          v: 27,
         };
 
         const mockResponse = {
