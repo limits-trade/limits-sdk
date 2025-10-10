@@ -37,8 +37,11 @@ async function quickStart() {
     userAddress,
     devicePublicKey: device.publicKey,
   });
-  
 
+  // Step 1.5 
+  // Approve BuilderFee and Agent 
+  // Please refer to examples/basic-usage.ts
+  
   // Step 2: Verify user keys (required before trading)
   const verifyResult = await sdk.verifyUser({
     userAddress,
