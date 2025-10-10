@@ -8,13 +8,7 @@ This directory contains usage examples for the Limits SDK.
 import { LimitsSDK } from 'limits-sdk';
 
 // Initialize the SDK
-const sdk = new LimitsSDK({
-  baseURL: 'https://api.your-platform.com',
-  timeout: 30000,
-  headers: {
-    'X-API-Key': 'your-api-key', // if required
-  },
-});
+const sdk = new LimitsSDK();
 
 // Example: Create Order
 async function createOrder() {
@@ -49,7 +43,6 @@ async function updateLeverage() {
       coin: 'BTC',
       leverage: 10,
       leverageType: 'cross',
-      privateKey: 'optional-private-key', // Optional
     });
     
     console.log('Leverage updated:', result);
@@ -78,7 +71,7 @@ async function verifyUser() {
     const result = await sdk.verifyUser({
       userAddress: '0x1234567890123456789012345678901234567890',
       agentAddress: '0x9876543210987654321098765432109876543210',
-      nonce: '789012',
+      nonce: 789012,
       r: '0xabc789',
       s: '0xdef012',
       v: 28,
@@ -96,7 +89,7 @@ async function verifyDevice() {
   try {
     const result = await sdk.verifyDevice({
       signature: '0xsignature123',
-      nonce: '345678',
+      nonce: 345678,
       agentAddress: '0x9876543210987654321098765432109876543210',
       userAddress: '0x1234567890123456789012345678901234567890',
       chainId: 1, // Optional
@@ -171,7 +164,7 @@ const orderRequest: LimitsOrderRequest = {
   is_buy: true,
   sz: 1.0,
   reduce_only: false,
-  nonce: '123456',
+  nonce: 123456,
   r: '0xabc123',
   s: '0xdef456',
   v: 27,
@@ -185,8 +178,7 @@ const leverageRequest: LeverageRequest = {
   userAddress: '0x1234567890123456789012345678901234567890',
   coin: 'BTC',
   leverage: 10,
-  leverageType: 'cross',
-  privateKey: 'optional-private-key', // Optional
+  isCross: true,
 };
 
 const connectRequest: ConnectUserRequest = {
@@ -197,7 +189,7 @@ const connectRequest: ConnectUserRequest = {
 const verifyKeysRequest: VerifyKeysRequest = {
   userAddress: '0x1234567890123456789012345678901234567890',
   agentAddress: '0x9876543210987654321098765432109876543210',
-  nonce: '789012',
+  nonce: 789012,
   r: '0xabc789',
   s: '0xdef012',
   v: 28,
@@ -206,9 +198,9 @@ const verifyKeysRequest: VerifyKeysRequest = {
 
 const verifyDeviceRequest: VerifyDeviceRequest = {
   signature: '0xsignature123',
-  nonce: '345678',
+  nonce: 345678,
   agentAddress: '0x9876543210987654321098765432109876543210',
   userAddress: '0x1234567890123456789012345678901234567890',
-  chainId: 1, // Optional
+  chainId: 1,
 };
 ```

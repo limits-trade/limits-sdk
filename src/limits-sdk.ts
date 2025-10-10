@@ -12,6 +12,8 @@ import {
   VerifyKeysResponse,
   ApiResponse,
   LimitsOrderRequest,
+  SignatureData,
+  GenerateSignatureRequest,
 } from './types';
 
 export class LimitsSDK {
@@ -19,11 +21,11 @@ export class LimitsSDK {
 
   constructor(config: LimitsSDKConfig = {}) {
     const defaultConfig: LimitsSDKConfig = {
-      baseURL: 'http://localhost:3001/dmp',
+      baseURL: 'https://app.limits.trade',
       timeout: 30000,
       ...config,
     };
-    
+
     this.httpClient = new HttpClient(defaultConfig);
   }
 
@@ -77,5 +79,83 @@ export class LimitsSDK {
   async verifyDevice(verifyRequest: VerifyDeviceRequest): Promise<VerifyDeviceResponse> {
     const response = await this.httpClient.post<ApiResponse<VerifyDeviceResponse>>('/verifyDevice', verifyRequest);
     return response.data as VerifyDeviceResponse;
+  }
+
+  // Signature Generation Methods
+
+  /**
+   * Generate EIP-712 signature data for different request types
+   * @param signatureType - The type of signature (createOrder, updateLeverage, etc.)
+   * @param request - The request object containing the data to sign
+   * @returns SignatureData object with domain, types, and message for EIP-712 signing
+   */
+  generateSignatureData(request: GenerateSignatureRequest): SignatureData {
+    const domain = {
+      name: 'LimitsTrade',
+      version: '1',
+      chainId: request.chainId,
+    };
+
+    switch (request.signatureType) {
+      case 'createOrder':
+        return {
+          domain,
+          types: {
+            VerifyOrder: [
+              { name: 'userAddress', type: 'string' },
+              { name: 'coin', type: 'string' },
+              { name: 'nonce', type: 'uint64' },
+              { name: 'isBuy', type: 'bool' },
+              { name: 'reduceOnly', type: 'bool' },
+            ],
+          },
+          message: {
+            userAddress: request.userAddress,
+            coin: request.coin,
+            nonce: request.nonce,
+            isBuy: request.isBuy,
+            reduceOnly: request.reduceOnly,
+          },
+        };
+
+      case 'updateLeverage':
+        return {
+          domain,
+          types: {
+            VerifyLeverage: [
+              { name: 'userAddress', type: 'string' },
+              { name: 'coin', type: 'string' },
+              { name: 'nonce', type: 'unit64' },
+              { name: 'leverage', type: 'uint64' },
+              { name: 'isCross', type: 'bool' },
+            ],
+          },
+          message: {
+            userAddress: request.userAddress,
+            coin: request.coin,
+            nonce: request.nonce,
+            leverage: request.leverage,
+            leverageType: request.isCross,
+          },
+        };
+      case 'verifyDevice':
+        return {
+          domain,
+          types: {
+            VerifyDevice: [
+              { name: 'userAddress', type: 'string' },
+              { name: 'agentAddress', type: 'string' },
+              { name: 'nonce', type: 'unit64' },
+            ],
+          },
+          message: {
+            userAddress: request.userAddress,
+            agentAddress: request.agentAddress,
+            nonce: request.nonce,
+          },
+        };
+      default:
+        throw new Error(`Unsupported signature type: ${request.signatureType}`);
+    }
   }
 }

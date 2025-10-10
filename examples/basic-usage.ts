@@ -35,14 +35,14 @@ async function basicTradingExample(): Promise<void> {
             userAddress,
             coin: 'BTC',
             leverage: 10,
-            leverageType: 'cross',
+            isCross: true,
         });
         console.log('✅ Leverage set:', leverageResult);
         console.log();
 
         // 3. Create an order
         console.log('💰 Creating buy order for 0.1 BTC...');
-        const nonce = Date.now().toString();
+        const nonce = Date.now();
 
         const domain = {
             name: 'LimitsTrade',
@@ -52,7 +52,7 @@ async function basicTradingExample(): Promise<void> {
 
         const types = {
             VerifyOrder: [
-                { name: 'nonce', type: 'string' },
+                { name: 'nonce', type: 'unit64' },
                 { name: 'coin', type: 'string' },
                 { name: 'isBuy', type: 'bool' },
                 { name: 'reduceOnly', type: 'bool' },

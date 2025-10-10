@@ -18,10 +18,14 @@ export interface LimitsOrderRequest {
 // Leverage Types
 export type LeverageRequest = {
     userAddress: string;
-    privateKey?: string;
     coin: string;
     leverage: number;
-    leverageType: 'cross' | 'isolated';
+    isCross: boolean;
+    nonce: number;
+    r: string;
+    s: string;
+    v: number;
+    chainId: number;
 };
 
 // Connection and Verification Types
@@ -36,11 +40,13 @@ export interface ConnectUserResponse {
 }
 
 export interface VerifyDeviceRequest {
-    signature: string;
-    nonce: string;
-    agentAddress: string;
     userAddress: string;
-    chainId?: number;
+    agentAddress: string;
+    nonce: number;
+    r: string,
+    s: string,
+    v: number,
+    chainId: number;
 }
 
 export interface VerifyDeviceResponse {
@@ -51,7 +57,7 @@ export interface VerifyDeviceResponse {
 export interface VerifyKeysRequest {
     userAddress: string;
     agentAddress: string;
-    nonce: string;
+    nonce: number;
     r: string,
     s: string,
     v: number,
@@ -92,4 +98,37 @@ export interface SDKError extends Error {
     code?: string;
     status?: number;
     response?: unknown;
+}
+
+// EIP-712 Signature Types
+export type SignatureType = 'createOrder' | 'updateLeverage' | 'verifyDevice';
+
+export interface EIP712Domain {
+    name: string;
+    version: string;
+    chainId: number;
+}
+
+export interface EIP712Types {
+    [key: string]: Array<{ name: string; type: string }>;
+}
+
+export interface SignatureData {
+    domain: EIP712Domain;
+    types: EIP712Types;
+    message: Record<string, any>;
+}
+
+
+export interface GenerateSignatureRequest {
+    userAddress: string;
+    coin: string;
+    nonce: number;
+    chainId: number;
+    signatureType: SignatureType;
+    agentAddress?: string;
+    isBuy?: boolean;
+    reduceOnly?: boolean;
+    leverage?: number;
+    isCross?: boolean;
 }

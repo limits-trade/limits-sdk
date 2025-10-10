@@ -24,27 +24,34 @@ import { LimitsSDK } from 'limits-sdk';
 // Initialize the SDK with default configuration
 const sdk = new LimitsSDK();
 
-// Or initialize with custom configuration
-const sdk = new LimitsSDK({
-  baseURL: 'https://api.your-platform.com', // Optional, defaults to http://localhost:3001/dmp
-  timeout: 30000,
-  headers: {
-    'Authorization': 'Bearer your-token', // if required
-  },
-});
-
-// Create an order
-const result = await sdk.createOrder({
+// Prepare order data
+const orderData = {
   userAddress: '0x1234567890123456789012345678901234567890',
   coin: 'BTC',
   is_buy: true,
   sz: 1.0,
   reduce_only: false,
   nonce: '123456',
-  r: '0xabc',
-  s: '0xdef',
-  v: 27,
   chainId: 1,
+};
+
+// Generate EIP-712 signature data using the SDK helper
+const signatureData = sdk.generateSignatureData('createOrder', orderData);
+
+// Sign the typed data with your device private key to get r, s, v values
+const signature = await wallet.signTypedData(
+  signatureData.domain,
+  signatureData.types,
+  signatureData.message
+);
+const { r, s, v } = ethers.utils.splitSignature(signature);
+
+// Create an order
+const result = await sdk.createOrder({
+  ...orderData,
+  r,
+  s,
+  v,
 });
 ```
 
@@ -54,7 +61,14 @@ const result = await sdk.createOrder({
 
 #### Create Order
 
+Before creating orders, ensure you've connected and verified your device using `connectUser()` and `verifyDevice()`. The device private key from that flow must be used to sign order requests.
+
 ```typescript
+// First, sign the order data with your device private key using EIP-712
+// Use the domain, types, and message structure shown in Quick Start
+const signature = await wallet.signTypedData(domain, types, message);
+const { r, s, v } = ethers.utils.splitSignature(signature);
+
 const orderResult = await sdk.createOrder({
   userAddress: '0x...',
   coin: 'BTC',
@@ -62,9 +76,9 @@ const orderResult = await sdk.createOrder({
   sz: 1.0,
   reduce_only: false,
   nonce: '123456',
-  r: '0xabc',
-  s: '0xdef',
-  v: 27,
+  r: r, // From EIP-712 signature above
+  s: s, // From EIP-712 signature above
+  v: v, // From EIP-712 signature above
   chainId: 1,
   orderId: 'optional-order-id', // Optional
   cloid: 'custom-client-order-id', // Optional
@@ -97,14 +111,16 @@ const connectResult = await sdk.connectUser({
 
 #### Verify User Keys
 
+**Important**: The `r`, `s`, `v` signature parameters required for `verifyUser` are generated during the `approveAgent` process. Use the same signature that you send to the Hyperliquid API `approveAgent` endpoint.
+
 ```typescript
 const verifyResult = await sdk.verifyUser({
   userAddress: '0x...',
   agentAddress: '0x...',
   nonce: 'nonce-string',
-  r: '0xabc',
-  s: '0xdef',
-  v: 27,
+  r: '0xabc', // From approveAgent signature
+  s: '0xdef', // From approveAgent signature
+  v: 27,      // From approveAgent signature
   chainId: 1,
 });
 ```
@@ -119,6 +135,47 @@ const deviceVerifyResult = await sdk.verifyDevice({
   userAddress: '0x...',
   chainId: 1, // Optional
 });
+```
+
+### Signature Generation
+
+The SDK provides a helper method to generate EIP-712 signature data for different request types:
+
+#### Generate Signature Data
+
+```typescript
+// For create order requests
+const orderData = {
+  nonce: '123456',
+  coin: 'BTC',
+  is_buy: true,
+  reduce_only: false,
+  userAddress: '0x...',
+  chainId: 1,
+};
+
+const signatureData = sdk.generateSignatureData('createOrder', orderData);
+// Returns: { domain, types, message } for EIP-712 signing
+
+// For update leverage requests
+const leverageData = {
+  userAddress: '0x...',
+  coin: 'BTC',
+  leverage: 10,
+  leverageType: 'cross',
+  chainId: 1,
+};
+
+const leverageSignatureData = sdk.generateSignatureData('updateLeverage', leverageData);
+
+// Use with ethers.js or similar library
+const signature = await wallet.signTypedData(
+  signatureData.domain,
+  signatureData.types,
+  signatureData.message
+);
+
+const { r, s, v } = ethers.utils.splitSignature(signature);
 ```
 
 ## Types
@@ -139,6 +196,10 @@ import {
   VerifyKeysResponse,
   LimitsSDKConfig,
   SDKError,
+  SignatureType,
+  SignatureData,
+  EIP712Domain,
+  EIP712Types,
 } from 'limits-sdk';
 ```
 
