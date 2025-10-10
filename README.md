@@ -38,6 +38,7 @@ async function quickStart() {
     devicePublicKey: device.publicKey,
   });
   
+
   // Step 2: Verify user keys (required before trading)
   const verifyResult = await sdk.verifyUser({
     userAddress,

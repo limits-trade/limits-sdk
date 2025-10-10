@@ -132,3 +132,62 @@ export interface GenerateSignatureRequest {
     leverage?: number;
     isCross?: boolean;
 }
+
+
+export type HyperliquidPermitTypes = {
+    [typeName: string]: { name: string; type: string }[];
+};
+
+export type HyperliquidDomain = {
+    name: string;
+    version: string;
+    chainId: number;
+    verifyingContract: string;
+};
+
+export type HyperliquidPermitMessage = {
+    type: string;
+    hyperliquidChain: string;
+    signatureChainId: number;
+    maxFeeRate?: string;
+    builder?: string;
+    agentAddress?: string;
+    agentName?: string;
+    nonce: number;
+};
+
+
+export interface HyperliquidAction {
+    type: string;
+    hyperliquidChain: string;
+    signatureChainId: string;
+    agentAddress?: string;
+    agentName?: string;
+    nonce: number;
+    maxFeeRate?: string;
+    builder?: string;
+}
+export interface Signature {
+    r: string;
+    s: string;
+    v: number;
+}
+
+export interface HyperliquidRequest {
+    action: HyperliquidAction;
+    nonce: number;
+    signature: Signature;
+}
+
+export interface HyperliquidResponse {
+    status: string;
+    response?: any;
+    error?: string;
+}
+
+
+export const BUILDER_FEE_ADDRESS = '0x746337a98821e1e38AA2bAd0e77900d98B80609e';
+export const BUILDER_FEE = '0.1%';
+export const API_URL = "https://api.hyperliquid.xyz";
+export const EXCHANGE_ENDPOINT = "/exchange";
+export const INFO_ENDPOINT = "/info";

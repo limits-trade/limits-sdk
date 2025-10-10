@@ -14,7 +14,18 @@ import {
   LimitsOrderRequest,
   SignatureData,
   GenerateSignatureRequest,
+  HyperliquidPermitTypes,
+  HyperliquidPermitMessage,
+  HyperliquidDomain,
+  BUILDER_FEE,
+  BUILDER_FEE_ADDRESS,
+  HyperliquidResponse,
+  HyperliquidAction,
+  HyperliquidRequest,
+  API_URL,
+  EXCHANGE_ENDPOINT,
 } from './types';
+import ethers from 'ethers';
 
 export class LimitsSDK {
   private httpClient: HttpClient;
@@ -158,4 +169,164 @@ export class LimitsSDK {
         throw new Error(`Unsupported signature type: ${request.signatureType}`);
     }
   }
+
+  getHyperliquidDomain(chainId: BigInt): HyperliquidDomain {
+    const domain = {
+      name: 'HyperliquidSignTransaction',
+      version: '1',
+      chainId: Number(chainId),
+      verifyingContract: '0x0000000000000000000000000000000000000000',
+    };
+    return domain;
+  }
+
+  getHyperliquidPermit(
+    type: string,
+    nonce: number,
+    chainId: BigInt,
+    agentAddress?: string,
+  ): { types: HyperliquidPermitTypes; message: HyperliquidPermitMessage } {
+    let types: HyperliquidPermitTypes;
+    const signatureChainId = Number(chainId);
+    let message: HyperliquidPermitMessage = {
+      type,
+      hyperliquidChain: 'Mainnet',
+      signatureChainId,
+      nonce: nonce,
+    };
+
+    if (type === 'approveBuilderFee') {
+      message = {
+        ...message,
+        maxFeeRate: BUILDER_FEE,
+        builder: BUILDER_FEE_ADDRESS.toLowerCase(),
+      };
+
+      types = {
+        ['HyperliquidTransaction:ApproveBuilderFee']: [
+          { name: 'hyperliquidChain', type: 'string' },
+          { name: 'maxFeeRate', type: 'string' },
+          { name: 'builder', type: 'address' },
+          { name: 'nonce', type: 'uint64' },
+        ],
+      };
+    } else {
+      const validUntil = nonce + 15552000000;
+      message = {
+        ...message,
+        agentAddress: agentAddress || BUILDER_FEE_ADDRESS.toLowerCase(), // Use provided agentAddress or fallback
+        agentName: `Limits valid_until ${validUntil}`,
+      };
+
+      types = {
+        ['HyperliquidTransaction:ApproveAgent']: [
+          { name: 'hyperliquidChain', type: 'string' },
+          { name: 'agentAddress', type: 'address' },
+          { name: 'agentName', type: 'string' },
+          { name: 'nonce', type: 'uint64' },
+        ],
+      };
+    }
+
+    return { types, message };
+  }
+
+  /**
+ * Submit agent permit to Hyperliquid
+ */
+  async submitAgentPermit(
+    permit: {
+      types: HyperliquidPermitTypes;
+      message: HyperliquidPermitMessage;
+    },
+    signature: string,
+    chainId: number
+  ): Promise<HyperliquidResponse> {
+    try {
+      // Parse the signature into r, s, v components
+      const sig = ethers.Signature.from(signature);
+
+      const action: HyperliquidAction = {
+        type: permit.message.type,
+        hyperliquidChain: permit.message.hyperliquidChain,
+        signatureChainId: this.toBeHex(chainId),
+        nonce: permit.message.nonce,
+      };
+
+      // Add type-specific fields
+      if (permit.message.type === "approveBuilderFee") {
+        action.maxFeeRate = permit.message.maxFeeRate;
+        action.builder = permit.message.builder;
+      } else if (permit.message.agentAddress && permit.message.agentName) {
+        action.agentAddress = permit.message.agentAddress;
+        action.agentName = permit.message.agentName;
+      }
+
+      const hyperRequest: HyperliquidRequest = {
+        action,
+        nonce: permit.message.nonce,
+        signature: {
+          r: sig.r,
+          s: sig.s,
+          v: sig.v,
+        },
+      };
+
+      return await this.callHyperApi(EXCHANGE_ENDPOINT, hyperRequest);
+    } catch (error) {
+      console.error("Failed to submit agent permit:", error);
+      return {
+        status: "error",
+        error:
+          error instanceof Error ? error.message : "Failed to submit permit",
+      };
+    }
+  }
+
+  /**
+ * Call Hyperliquid API with signed permit data
+ */
+  private async callHyperApi(
+    endpoint: string,
+    request: HyperliquidRequest
+  ): Promise<HyperliquidResponse> {
+    try {
+
+      const response = await fetch(API_URL + endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(request),
+        credentials: "omit", // equivalent to withCredentials: false
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return {
+          status: "error",
+          error:
+            data.error || `HTTP ${response.status}: ${response.statusText}`,
+        };
+      }
+
+      return {
+        status: "success",
+        response: data,
+      };
+    } catch (error) {
+      console.error("Hyperliquid API call failed:", error);
+      return {
+        status: "error",
+        error:
+          error instanceof Error ? error.message : "Unknown error occurred",
+      };
+    }
+  }
+
+  private toBeHex(value: number | bigint): string {
+    return "0x" + value.toString(16);
+  }
+
 }
