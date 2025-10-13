@@ -8,7 +8,7 @@ export interface LimitsOrderRequest {
     reduce_only: boolean;
     cloid?: string;
     threshold?: number;
-    nonce: string;
+    nonce: number;
     r: string;
     s: string;
     v: number;

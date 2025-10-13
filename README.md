@@ -26,9 +26,10 @@ import { ethers } from 'ethers';
 const sdk = new LimitsSDK();
 
 // Setup your device wallet
-const devicePrivateKey = 'your-device-private-key';
-const devicePrivateKey = ether.
+const devicePk = ethers.Wallet.createRandom().privateKey;
+// Make sure you store the device private key as its used for all actions 
 const device = new ethers.Wallet(devicePrivateKey);
+const deviceAddress = device.address
 
 async function quickStart() {
   const userAddress = '0x1234567890123456789012345678901234567890';
@@ -36,7 +37,7 @@ async function quickStart() {
   // Step 1: Connect user
   const connectionResult = await sdk.connectUser({
     userAddress,
-    devicePublicKey: device.publicKey,
+    deviceAddress: deviceAddress,
   });
 
   // Step 1.5 
