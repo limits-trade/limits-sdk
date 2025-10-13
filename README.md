@@ -45,7 +45,7 @@ async function quickStart() {
   // Step 2: Verify user keys (required before trading)
   const verifyResult = await sdk.verifyUser({
     userAddress,
-    agentAddress: '0x9876543210987654321098765432109876543210',
+    agentAddress: connectionResult.hypeApiAddress,
     nonce: Date.now(),
     r: '0xabc123...', // From approveAgent signature
     s: '0xdef456...', // From approveAgent signature

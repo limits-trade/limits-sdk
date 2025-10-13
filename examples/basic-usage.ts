@@ -19,7 +19,7 @@ async function basicTradingExample(): Promise<void> {
         console.log('📱 Connecting user...');
         const connectionResult = await sdk.connectUser({
             userAddress,
-            devicePublicKey: deviceAddress,
+            deviceAddress: deviceAddress,
         });
         console.log('✅ User connected:', connectionResult);
         console.log();
@@ -56,7 +56,7 @@ async function basicTradingExample(): Promise<void> {
         console.log('🔑 Verifying user keys...');
         const verifyResult = await sdk.verifyUser({
             userAddress,
-            agentAddress: connectionResult.hypePublicKey,
+            agentAddress: connectionResult.hypeApiAddress,
             nonce: nonceForAgent,
             r: sig.r,
             s: sig.s,
