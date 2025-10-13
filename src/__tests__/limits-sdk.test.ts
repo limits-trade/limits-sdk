@@ -83,7 +83,7 @@ describe('LimitsSDK', () => {
       it('should connect a user', async () => {
         const connectRequest = {
           userAddress: '0x123',
-          devicePublicKey: 'pubkey123',
+          deviceAddress: 'pubkey123',
         };
 
         const mockResponse = {
@@ -91,7 +91,7 @@ describe('LimitsSDK', () => {
           message: 'User connected successfully',
           data: {
             userAddress: '0x123',
-            hypePublicKey: 'hype123',
+            hypeApiAddress: 'hype123',
           },
         };
 
