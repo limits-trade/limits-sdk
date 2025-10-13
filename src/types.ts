@@ -31,12 +31,12 @@ export type LeverageRequest = {
 // Connection and Verification Types
 export interface ConnectUserRequest {
     userAddress: string;
-    devicePublicKey: string;
+    deviceAddress: string;
 }
 
 export interface ConnectUserResponse {
     userAddress: string;
-    hypePublicKey: string;
+    hypeApiAddress: string;
 }
 
 export interface VerifyDeviceRequest {

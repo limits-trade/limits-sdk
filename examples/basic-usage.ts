@@ -10,6 +10,7 @@ async function basicTradingExample(): Promise<void> {
     const device = new ethers.Wallet(devicePk);
     const wallet = new ethers.Wallet(privateKey);
     const userAddress = wallet.address
+    const deviceAddress = device.address;
 
     try {
         console.log('🚀 Starting basic trading example...\n');
@@ -18,16 +19,16 @@ async function basicTradingExample(): Promise<void> {
         console.log('📱 Connecting user...');
         const connectionResult = await sdk.connectUser({
             userAddress,
-            devicePublicKey: 'your-device-public-key',
+            devicePublicKey: deviceAddress,
         });
         console.log('✅ User connected:', connectionResult);
         console.log();
 
-        // 3. Submit Builder Fee Permit to HL
+        // 2. Submit Builder Fee Permit to HL
         const nonceForBuilder = Date.now();
 
         const permit = sdk.getHyperliquidPermit('approveBuilderFee', nonceForBuilder, 1n);
-        const feeTypedData = this.createHyperliquidTypedData(permit.types, permit.message, 1n);
+        const feeTypedData = sdk.createHyperliquidTypedData(permit.types, permit.message, 1n);
         const permitSignature = await wallet.signTypedData(
             feeTypedData.domain,
             permit.types,
@@ -37,11 +38,11 @@ async function basicTradingExample(): Promise<void> {
         const permitResult = await sdk.submitHLPermit(permit, permitSignature, 1);
         console.log('✅ Builder fee permit submitted:', permitResult);
 
-        // 4-5. Submit Agent Permit to HL and verifyUser
+        // 3-4. Submit Agent Permit to HL and verifyUser
         const nonceForAgent = Date.now();
 
         const agentPermit = sdk.getHyperliquidPermit('approveAgent', nonceForAgent, 1n);
-        const agentTypedData = this.createHyperliquidTypedData(agentPermit.types, agentPermit.message, 1n);
+        const agentTypedData = sdk.createHyperliquidTypedData(agentPermit.types, agentPermit.message, 1n);
         const agentSignature = await wallet.signTypedData(
             agentTypedData.domain,
             agentPermit.types,
@@ -55,8 +56,8 @@ async function basicTradingExample(): Promise<void> {
         console.log('🔑 Verifying user keys...');
         const verifyResult = await sdk.verifyUser({
             userAddress,
-            agentAddress: '0x9876543210987654321098765432109876543210',
-            nonce: Date.now(),
+            agentAddress: connectionResult.hypePublicKey,
+            nonce: nonceForAgent,
             r: sig.r,
             s: sig.s,
             v: sig.v,
@@ -65,7 +66,7 @@ async function basicTradingExample(): Promise<void> {
         console.log('✅ User keys verified:', verifyResult);
         console.log();
 
-        // 6. Set leverage
+        // 5. Set leverage
         console.log('⚖️ Setting cross leverage to 10x for BTC...');
         const leverageNonce = Date.now();
         const leverageSignatureData = sdk.generateSignatureData({
@@ -99,7 +100,7 @@ async function basicTradingExample(): Promise<void> {
         console.log('✅ Leverage set:', leverageResult);
         console.log();
 
-        // 7. Create an order
+        // 6. Create an order
         console.log('💰 Creating buy order for 0.1 BTC...');
         const orderNonce = Date.now();
 
@@ -136,7 +137,7 @@ async function basicTradingExample(): Promise<void> {
         console.log('✅ Order created:', orderResult);
         console.log();
 
-        // 8. Verify device
+        // 7. Verify device
         console.log('🔐 Verifying device...');
         const deviceNonce = Date.now();
         const agentAddress = '0x9876543210987654321098765432109876543210';

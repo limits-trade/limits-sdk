@@ -25,7 +25,7 @@ import {
   API_URL,
   EXCHANGE_ENDPOINT,
 } from './types';
-import ethers from 'ethers';
+import { Signature } from 'ethers';
 
 export class LimitsSDK {
   private httpClient: HttpClient;
@@ -231,6 +231,27 @@ export class LimitsSDK {
     return { types, message };
   }
 
+   /**
+   * Create EIP-712 typed data for Hyperliquid trading actions
+   */
+  createHyperliquidTypedData(types: HyperliquidPermitTypes, message: HyperliquidPermitMessage, chainId: BigInt) {
+    const domain = this.getHyperliquidDomain(chainId);
+    return {
+      domain,
+      types: {
+        EIP712Domain: [
+          { name: 'name', type: 'string' },
+          { name: 'version', type: 'string' },
+          { name: 'chainId', type: 'uint256' },
+          { name: 'verifyingContract', type: 'address' },
+        ],
+        ...types,
+      },
+      primaryType: Object.keys(types)[0], // Use the first type as primary
+      message,
+    };
+  }
+
   /**
  * Submit agent permit to Hyperliquid
  */
@@ -244,7 +265,7 @@ export class LimitsSDK {
   ): Promise<HyperliquidResponse> {
     try {
       // Parse the signature into r, s, v components
-      const sig = ethers.Signature.from(signature);
+      const sig = Signature.from(signature);
 
       const action: HyperliquidAction = {
         type: permit.message.type,
