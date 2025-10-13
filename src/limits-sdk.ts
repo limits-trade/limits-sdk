@@ -170,7 +170,7 @@ export class LimitsSDK {
     }
   }
 
-  getHyperliquidDomain(chainId: bigint): HyperliquidDomain {
+  getHyperliquidDomain(chainId: BigInt): HyperliquidDomain {
     const domain = {
       name: 'HyperliquidSignTransaction',
       version: '1',
@@ -234,7 +234,7 @@ export class LimitsSDK {
    /**
    * Create EIP-712 typed data for Hyperliquid trading actions
    */
-  createHyperliquidTypedData(types: HyperliquidPermitTypes, message: HyperliquidPermitMessage, chainId: bigint) {
+  createHyperliquidTypedData(types: HyperliquidPermitTypes, message: HyperliquidPermitMessage, chainId: BigInt) {
     const domain = this.getHyperliquidDomain(chainId);
     return {
       domain,
@@ -346,7 +346,7 @@ export class LimitsSDK {
     }
   }
 
-  private toBeHex(value: number | bigint): string {
+  private toBeHex(value: number | BigInt): string {
     return "0x" + value.toString(16);
   }
 
