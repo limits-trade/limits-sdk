@@ -127,7 +127,7 @@ async function basicTradingExample(): Promise<void> {
             is_buy: true,
             sz: 0.1,
             reduce_only: false,
-            nonce: orderNonce.toString(),
+            nonce: orderNonce,
             r: orderSig.r,
             s: orderSig.s,
             v: orderSig.v,

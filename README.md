@@ -83,7 +83,7 @@ async function quickStart() {
     is_buy: true,
     sz: 1.0,
     reduce_only: false,
-    nonce: orderNonce.toString(),
+    nonce: orderNonce,
     r,
     s,
     v,
