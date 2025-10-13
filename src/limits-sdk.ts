@@ -170,7 +170,7 @@ export class LimitsSDK {
     }
   }
 
-  getHyperliquidDomain(chainId: BigInt): HyperliquidDomain {
+  getHyperliquidDomain(chainId: bigint): HyperliquidDomain {
     const domain = {
       name: 'HyperliquidSignTransaction',
       version: '1',
@@ -234,7 +234,7 @@ export class LimitsSDK {
    /**
    * Create EIP-712 typed data for Hyperliquid trading actions
    */
-  createHyperliquidTypedData(types: HyperliquidPermitTypes, message: HyperliquidPermitMessage, chainId: BigInt) {
+  createHyperliquidTypedData(types: HyperliquidPermitTypes, message: HyperliquidPermitMessage, chainId: bigint) {
     const domain = this.getHyperliquidDomain(chainId);
     return {
       domain,

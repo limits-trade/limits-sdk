@@ -58,6 +58,7 @@ export interface VerifyKeysRequest {
     userAddress: string;
     agentAddress: string;
     nonce: number;
+    validity?: number;
     r: string,
     s: string,
     v: number,
