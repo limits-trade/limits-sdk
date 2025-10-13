@@ -5,7 +5,7 @@ import { ethers } from 'ethers';
 const sdk = new LimitsSDK();
 
 async function basicTradingExample(): Promise<void> {
-    const devicePk = 'your-device-private-key';
+    const devicePk = ethers.Wallet.createRandom().privateKey;
     const privateKey = 'your-private-key';
     const device = new ethers.Wallet(devicePk);
     const wallet = new ethers.Wallet(privateKey);

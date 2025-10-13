@@ -27,6 +27,7 @@ const sdk = new LimitsSDK();
 
 // Setup your device wallet
 const devicePrivateKey = 'your-device-private-key';
+const devicePrivateKey = ether.
 const device = new ethers.Wallet(devicePrivateKey);
 
 async function quickStart() {
@@ -97,7 +98,7 @@ async function quickStart() {
 
 #### Create Order
 
-Before creating orders, ensure you've connected and verified your device using `connectUser()` and `verifyDevice()`. The device private key from that flow must be used to sign order requests.
+Before creating orders, ensure you've connected and verified your device using `connectUser()` and `verifyUser()`. The device private key from that flow must be used to sign order requests.
 
 ```typescript
 // First, sign the order data with your device private key using EIP-712
@@ -286,7 +287,6 @@ const sdk = new LimitsSDK();
 Check out the [examples](./examples) directory for more detailed usage examples:
 
 - [Basic Usage](./examples/basic-usage.ts) - Simple trading operations
-- [Advanced Usage](./examples/advanced-usage.ts) - Advanced features and error handling
 
 ## API Endpoints
 
