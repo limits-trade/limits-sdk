@@ -34,7 +34,7 @@ async function basicTradingExample(): Promise<void> {
             permit.message
         );
 
-        const permitResult = await sdk.submitAgentPermit(permit, permitSignature, 1);
+        const permitResult = await sdk.submitHLPermit(permit, permitSignature, 1);
         console.log('✅ Builder fee permit submitted:', permitResult);
 
         // 4-5. Submit Agent Permit to HL and verifyUser
@@ -48,7 +48,7 @@ async function basicTradingExample(): Promise<void> {
             agentPermit.message
         );
 
-        const agentResult = await sdk.submitAgentPermit(agentPermit, agentSignature, 1);
+        const agentResult = await sdk.submitHLPermit(agentPermit, agentSignature, 1);
         console.log('✅ Agent permit submitted:', agentResult);
 
         const sig = ethers.Signature.from(agentSignature);

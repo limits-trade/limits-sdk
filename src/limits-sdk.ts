@@ -234,7 +234,7 @@ export class LimitsSDK {
   /**
  * Submit agent permit to Hyperliquid
  */
-  async submitAgentPermit(
+  async submitHLPermit(
     permit: {
       types: HyperliquidPermitTypes;
       message: HyperliquidPermitMessage;
