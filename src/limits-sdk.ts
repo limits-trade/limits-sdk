@@ -136,7 +136,7 @@ export class LimitsSDK {
             VerifyLeverage: [
               { name: 'userAddress', type: 'string' },
               { name: 'coin', type: 'string' },
-              { name: 'nonce', type: 'unit64' },
+              { name: 'nonce', type: 'uint64' },
               { name: 'leverage', type: 'uint64' },
               { name: 'isCross', type: 'bool' },
             ],
@@ -156,7 +156,7 @@ export class LimitsSDK {
             VerifyDevice: [
               { name: 'userAddress', type: 'string' },
               { name: 'agentAddress', type: 'string' },
-              { name: 'nonce', type: 'unit64' },
+              { name: 'nonce', type: 'uint64' },
             ],
           },
           message: {

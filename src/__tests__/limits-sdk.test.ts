@@ -26,7 +26,7 @@ describe('LimitsSDK', () => {
           is_buy: true,
           sz: 1,
           reduce_only: false,
-          nonce: '123456',
+          nonce: 123456,
           r: '0xabc',
           s: '0xdef',
           v: 27,
