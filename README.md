@@ -206,7 +206,7 @@ const leverageData = {
   userAddress: '0x...',
   coin: 'BTC',
   leverage: 10,
-  leverageType: 'cross',
+  isCross: true,
   chainId: 1,
 };
 

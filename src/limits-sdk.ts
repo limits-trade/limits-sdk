@@ -146,7 +146,7 @@ export class LimitsSDK {
             coin: request.coin,
             nonce: request.nonce,
             leverage: request.leverage,
-            leverageType: request.isCross,
+            isCross: request.isCross,
           },
         };
       case 'verifyDevice':
