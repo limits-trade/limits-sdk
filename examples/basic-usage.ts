@@ -41,7 +41,7 @@ async function basicTradingExample(): Promise<void> {
         // 3-4. Submit Agent Permit to HL and verifyUser
         const nonceForAgent = Date.now();
 
-        const agentPermit = sdk.getHyperliquidPermit('approveAgent', nonceForAgent, 1n);
+        const agentPermit = sdk.getHyperliquidPermit('approveAgent', nonceForAgent, 1n, connectionResult.hypeApiAddress);
         const agentTypedData = sdk.createHyperliquidTypedData(agentPermit.types, agentPermit.message, 1n);
         const agentSignature = await wallet.signTypedData(
             agentTypedData.domain,
