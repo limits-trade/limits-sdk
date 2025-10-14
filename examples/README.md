@@ -378,7 +378,7 @@ const verifyDeviceRequest: VerifyDeviceRequest = {
 };
 
 // Hyperliquid permit types
-const builderFeePermit = sdk.getHyperliquidPermit('approveBuilderFee', Date.now(), 1n);
+const builderFeePermit = sdk.getHyperliquidPermit('approveBuilderFee', Date.now(), 1n, connectionResult.hypeApiAddress);
 const agentPermit = sdk.getHyperliquidPermit('approveAgent', Date.now(), 1n);
 
 // Typed data for signing
