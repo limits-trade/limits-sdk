@@ -32,7 +32,7 @@ export class LimitsSDK {
 
   constructor(config: LimitsSDKConfig = {}) {
     const defaultConfig: LimitsSDKConfig = {
-      baseURL: 'https://app.limits.trade/dmp',
+      baseURL: 'https://api.limits.trade/dmp',
       timeout: 30000,
       ...config,
     };
