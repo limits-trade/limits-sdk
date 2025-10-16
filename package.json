@@ -1,13 +1,17 @@
 {
-  "name": "limits-sdk",
+  "name": "@limits-trade/limits-sdk",
   "version": "1.0.0",
   "description": "TypeScript SDK for Limits API - Trading and account management",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
   "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
   "files": [
-    "dist"
+    "dist",
+    "README.md"
   ],
   "scripts": {
     "build": "rollup -c",
