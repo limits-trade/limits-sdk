@@ -29,5 +29,3 @@ release_patch_and_push:
   variables:
     GIT_STRATEGY: fetch
     GIT_DEPTH: 0
-  only:
-    - main
