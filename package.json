@@ -31,8 +31,16 @@
     "typescript",
     "limits"
   ],
-  "author": "Limits Team",
+  "author": "Limits.trade Team",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/limits-trade/limits-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/limits-trade/limits-sdk/issues"
+  },
+  "homepage": "https://limits.trade",
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.4",
     "@rollup/plugin-node-resolve": "^15.2.1",
