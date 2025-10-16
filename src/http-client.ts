@@ -36,7 +36,7 @@ export class HttpClient {
 
   private handleError(error: any): SDKError {
     const sdkError = new Error() as SDKError;
-    
+
     if (error.response) {
       // Server responded with error status
       sdkError.message = error.response.data?.message || error.response.data?.error || error.message;
@@ -54,6 +54,11 @@ export class HttpClient {
     }
 
     return sdkError;
+  }
+  
+  async get<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+    const response: AxiosResponse<T> = await this.client.get(url, { params: data, ...config });
+    return response.data;
   }
 
   async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
