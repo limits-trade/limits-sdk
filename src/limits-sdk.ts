@@ -92,6 +92,40 @@ export class LimitsSDK {
     return response.data as VerifyDeviceResponse;
   }
 
+  /**
+ * Assign a CLOID (Client Order ID) to an address
+ * @param assignRequest - The assignment request with address and optional cloid
+ * @returns Promise with assignment response
+ */
+  async assignCloid(assignRequest: { address: string; cloid?: string }): Promise<{
+    success: boolean;
+    message: string;
+    data: {
+      address: string;
+      cloid?: string;
+    };
+  }> {
+    return this.httpClient.post('/assignCloid', assignRequest);
+  }
+
+  /**
+   * Get the CLOID (Client Order ID) for an address
+   * @param address - The Ethereum address to get CLOID for
+   * @returns Promise with CLOID retrieval response
+   */
+  async getCloid(address: string): Promise<{
+    success: boolean;
+    message: string;
+    data: {
+      address: string;
+      cloid?: string;
+    };
+  }> {
+    return this.httpClient.get(`/getCloid/${address}`);
+  }
+
+  // ...existing code...
+
   // Signature Generation Methods
 
   /**
@@ -231,9 +265,9 @@ export class LimitsSDK {
     return { types, message };
   }
 
-   /**
-   * Create EIP-712 typed data for Hyperliquid trading actions
-   */
+  /**
+  * Create EIP-712 typed data for Hyperliquid trading actions
+  */
   createHyperliquidTypedData(types: HyperliquidPermitTypes, message: HyperliquidPermitMessage, chainId: BigInt) {
     const domain = this.getHyperliquidDomain(chainId);
     return {
