@@ -42,6 +42,3 @@ temp/
 # Ignore cache
 .cache/
 .parcel-cache/
-
-# Ignore package-lock (if using yarn)
-package-lock.json
