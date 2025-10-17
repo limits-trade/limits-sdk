@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
 - Initial SDK implementation
 - Trading operations (create order,leverage)
 - Account management (connectUser, verify device, verifyUser)
@@ -17,9 +18,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Complete test suite
 - Documentation and examples
 
+## [1.0.6] - 2025-10-17
+
+### Changed
+
+- No code changes (pipeline changes only)
+
+## [1.0.5] - 2025-10-17
+
+### Changed
+
+- No code changes (pipeline changes only)
+
+## [1.0.4] - 2025-10-17
+
+### Changed
+
+- No code changes (pipeline changes only)
+
+## [1.0.3] - 2025-10-17
+
+### Changed
+
+- No code changes (pipeline changes only)
+
+## [1.0.2] - 2025-10-16
+
+### Changed
+
+- No code changes (pipeline changes only)
+
+## [1.0.1] - 2025-10-16
+
+### Changed
+
+- No code changes (pipeline changes only)
+
 ## [1.0.0] - 2025-09-30
 
 ### Added
+
 - Initial release of Limits SDK
 - Full API coverage for the Limits trading platform
 - TypeScript support with comprehensive type definitions
