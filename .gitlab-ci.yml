@@ -24,11 +24,16 @@ release_patch_and_push:
         git remote set-url github "https://${GITHUB_USER:-git}:${GITHUB_TOKEN}@${GITHUB_HOST:-github.com}/${GITHUB_REPOSITORY}.git"
       fi
   script:
-    - git fetch github main
-    - git rebase github/main
     - 'npm version patch -m "chore(release): %s [skip ci]"'
     - git push origin "${CI_COMMIT_BRANCH}" --follow-tags
-    - git push github "${CI_COMMIT_BRANCH}" --follow-tags
+
+    - VERSION=$(node -p "require('./package.json').version")
+    - TAG="v$VERSION"
+
+    - git fetch github main
+    - git rebase github/main
+    - git push github "${CI_COMMIT_BRANCH}" --force
+    - git push github "$TAG"
   variables:
     GIT_STRATEGY: fetch
     GIT_DEPTH: 0
