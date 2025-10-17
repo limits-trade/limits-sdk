@@ -24,10 +24,10 @@ release_patch_and_push:
         git remote set-url github "https://${GITHUB_USER:-git}:${GITHUB_TOKEN}@${GITHUB_HOST:-github.com}/${GITHUB_REPOSITORY}.git"
       fi
   script:
-    - 'npm version patch -m "chore(release): %s [skip ci]"'
-    - git push origin "${CI_COMMIT_BRANCH}" --follow-tags
     - git fetch github main
     - git rebase github/main
+    - 'npm version patch -m "chore(release): %s [skip ci]"'
+    - git push origin "${CI_COMMIT_BRANCH}" --follow-tags
     - git push github "${CI_COMMIT_BRANCH}" --follow-tags
   variables:
     GIT_STRATEGY: fetch
