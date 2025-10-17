@@ -25,7 +25,8 @@ release_patch_and_push:
       fi
   script:
     - 'npm version patch -m "chore(release): %s [skip ci]"'
-    - git push origin "${CI_COMMIT_BRANCH}" --follow-tags- git fetch github main
+    - git push origin "${CI_COMMIT_BRANCH}" --follow-tags
+    - git fetch github main
     - git rebase github/main
     - git push github "${CI_COMMIT_BRANCH}" --follow-tags
   variables:
