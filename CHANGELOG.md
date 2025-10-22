@@ -18,6 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Complete test suite
 - Documentation and examples
 
+## [1.0.16] - 2025-10-22
+
+### Changed
+
+- Update README
+
 ## [1.0.15] - 2025-10-17
 
 ### Changed
