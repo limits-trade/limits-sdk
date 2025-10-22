@@ -6,40 +6,39 @@ A TypeScript SDK for interacting with the Limits trading platform API. This SDK 
 
 - 🔒 **Type Safety**: Full TypeScript support with comprehensive type definitions
 - 🚀 **Easy to Use**: Simple, intuitive API for core trading operations
--  **Error Handling**: Comprehensive error handling with detailed error types
+- **Error Handling**: Comprehensive error handling with detailed error types
 - 🌐 **HTTP Client**: Built-in HTTP client with request/response interceptors
 - 📚 **Well Documented**: Extensive documentation and examples
 
 ## Installation
 
 ```bash
-npm install limits-sdk
+npm i @limits-trade/limits-sdk
 ```
 
 ## Quick Start
 
 ```typescript
-import { LimitsSDK } from 'limits-sdk';
-import { ethers } from 'ethers';
+import { LimitsSDK } from "@limits-trade/limits-sdk";
+import { ethers } from "ethers";
 
 // Initialize the SDK with default configuration
 const sdk = new LimitsSDK();
 
 // Setup your device wallet
 const devicePk = ethers.Wallet.createRandom().privateKey;
-// Make sure you store the device private key as its used for all actions 
+// Make sure you store the device private key as its used for all actions
 const device = new ethers.Wallet(devicePrivateKey);
-const deviceAddress = device.address
+const deviceAddress = device.address;
 
 async function quickStart() {
-  const userAddress = '0x1234567890123456789012345678901234567890';
+  const userAddress = "0x1234567890123456789012345678901234567890";
 
   // Step 1 (Optional): Assign CLOID for volume tracking
-  let cloid: string ;
+  let cloid: string;
 
   const cloidResult = await sdk.assignCloid({ address: userAddress });
   cloid = cloidResult.data.cloid;
-  
 
   // Step 2: Connect user
   const connectionResult = await sdk.connectUser({
@@ -47,31 +46,31 @@ async function quickStart() {
     deviceAddress: deviceAddress,
   });
 
-  // Step 2.5 
-  // Approve BuilderFee and Agent 
+  // Step 2.5
+  // Approve BuilderFee and Agent
   // Please refer to examples/basic-usage.ts
-  
+
   // Step 3: Verify user keys (required before trading)
   const verifyResult = await sdk.verifyUser({
     userAddress,
     agentAddress: connectionResult.hypeApiAddress,
     nonce: Date.now(),
-    r: '0xabc123...', // From approveAgent signature
-    s: '0xdef456...', // From approveAgent signature
+    r: "0xabc123...", // From approveAgent signature
+    s: "0xdef456...", // From approveAgent signature
     v: 27,
     chainId: 1,
   });
 
   // Step 4: Create an order
   const orderNonce = Date.now();
-  
+
   // Generate EIP-712 signature data using the SDK helper
   const signatureData = sdk.generateSignatureData({
     userAddress,
-    coin: 'BTC',
+    coin: "BTC",
     nonce: orderNonce,
     chainId: 1,
-    signatureType: 'createOrder',
+    signatureType: "createOrder",
     isBuy: true,
     reduceOnly: false,
   });
@@ -87,7 +86,7 @@ async function quickStart() {
   // Create the order
   const result = await sdk.createOrder({
     userAddress,
-    coin: 'BTC',
+    coin: "BTC",
     is_buy: true,
     sz: 1.0,
     reduce_only: false,
@@ -116,8 +115,8 @@ const signature = await wallet.signTypedData(domain, types, message);
 const { r, s, v } = ethers.utils.splitSignature(signature);
 
 const orderResult = await sdk.createOrder({
-  userAddress: '0x...',
-  coin: 'BTC',
+  userAddress: "0x...",
+  coin: "BTC",
   is_buy: true,
   sz: 1.0,
   reduce_only: false,
@@ -126,8 +125,8 @@ const orderResult = await sdk.createOrder({
   s: s, // From EIP-712 signature above
   v: v, // From EIP-712 signature above
   chainId: 1,
-  orderId: 'optional-order-id', // Optional
-  cloid: 'custom-client-order-id', // Optional
+  orderId: "optional-order-id", // Optional
+  cloid: "custom-client-order-id", // Optional
   threshold: 0.01, // Optional
 });
 ```
@@ -154,8 +153,8 @@ const leverageResult = await sdk.updateLeverage({
 
 ```typescript
 const connectResult = await sdk.connectUser({
-  userAddress: '0x...',
-  deviceAddress: 'your-device-address',
+  userAddress: "0x...",
+  deviceAddress: "your-device-address",
 });
 ```
 
@@ -165,12 +164,12 @@ const connectResult = await sdk.connectUser({
 
 ```typescript
 const verifyResult = await sdk.verifyUser({
-  userAddress: '0x...',
-  agentAddress: '0x...',
+  userAddress: "0x...",
+  agentAddress: "0x...",
   nonce: number,
-  r: '0xabc', // From approveAgent signature
-  s: '0xdef', // From approveAgent signature
-  v: 27,      // From approveAgent signature
+  r: "0xabc", // From approveAgent signature
+  s: "0xdef", // From approveAgent signature
+  v: 27, // From approveAgent signature
   chainId: 1,
 });
 ```
@@ -181,10 +180,10 @@ This endpoint exists to make sure that the user device key matches the device ke
 
 ```typescript
 const deviceVerifyResult = await sdk.verifyDevice({
-  signature: 'signature-string',
+  signature: "signature-string",
   nonce: number,
-  agentAddress: '0x...',
-  userAddress: '0x...',
+  agentAddress: "0x...",
+  userAddress: "0x...",
   chainId: 1,
 });
 ```
@@ -199,26 +198,29 @@ The SDK provides a helper method to generate EIP-712 signature data for differen
 // For create order requests
 const orderData = {
   nonce: 123456,
-  coin: 'BTC',
+  coin: "BTC",
   is_buy: true,
   reduce_only: false,
-  userAddress: '0x...',
+  userAddress: "0x...",
   chainId: 1,
 };
 
-const signatureData = sdk.generateSignatureData('createOrder', orderData);
+const signatureData = sdk.generateSignatureData("createOrder", orderData);
 // Returns: { domain, types, message } for EIP-712 signing
 
 // For update leverage requests
 const leverageData = {
-  userAddress: '0x...',
-  coin: 'BTC',
+  userAddress: "0x...",
+  coin: "BTC",
   leverage: 10,
   isCross: true,
   chainId: 1,
 };
 
-const leverageSignatureData = sdk.generateSignatureData('updateLeverage', leverageData);
+const leverageSignatureData = sdk.generateSignatureData(
+  "updateLeverage",
+  leverageData
+);
 
 // Use with ethers.js or similar library
 const signature = await wallet.signTypedData(
@@ -252,7 +254,7 @@ import {
   SignatureData,
   EIP712Domain,
   EIP712Types,
-} from 'limits-sdk';
+} from "limits-sdk";
 ```
 
 ## Error Handling
@@ -260,18 +262,18 @@ import {
 The SDK provides detailed error information:
 
 ```typescript
-import { SDKError } from 'limits-sdk';
+import { SDKError } from "limits-sdk";
 
 try {
   const result = await sdk.createOrder(orderRequest);
 } catch (error) {
   if (error instanceof Error) {
     const sdkError = error as SDKError;
-    
-    console.error('Error:', sdkError.message);
-    console.error('Code:', sdkError.code);
-    console.error('Status:', sdkError.status);
-    console.error('Response:', sdkError.response);
+
+    console.error("Error:", sdkError.message);
+    console.error("Code:", sdkError.code);
+    console.error("Status:", sdkError.status);
+    console.error("Response:", sdkError.response);
   }
 }
 ```
@@ -280,15 +282,13 @@ try {
 
 ```typescript
 interface LimitsSDKConfig {
-  baseURL?: string;  // Optional, defaults to 'http://localhost:3001/dmp'
-  timeout?: number;  // Optional, defaults to 30000ms
+  baseURL?: string; // Optional, defaults to 'http://localhost:3001/dmp'
+  timeout?: number; // Optional, defaults to 30000ms
   headers?: Record<string, string>; // Optional custom headers
 }
 
 // Default configuration
 const sdk = new LimitsSDK();
-
-
 ```
 
 ## Examples
@@ -318,14 +318,14 @@ Assign a CLOID to an address for volume tracking and rewards distribution:
 ```typescript
 // Option 1: Let the system generate a CLOID
 const assignResult = await sdk.assignCloid({
-  address: '0x1234567890123456789012345678901234567890'
+  address: "0x1234567890123456789012345678901234567890",
 });
 
 // Option 2: Provide your own 128-bit hex CLOID
-const customCloid = '0x' + 'a'.repeat(32); // 128-bit hex string
+const customCloid = "0x" + "a".repeat(32); // 128-bit hex string
 const assignResult = await sdk.assignCloid({
-  address: '0x1234567890123456789012345678901234567890',
-  cloid: customCloid
+  address: "0x1234567890123456789012345678901234567890",
+  cloid: customCloid,
 });
 
 // Response structure
@@ -344,7 +344,9 @@ interface AssignCloidResponse {
 Retrieve the assigned CLOID for an Ethereum address:
 
 ```typescript
-const cloidResult = await sdk.getCloid('0x1234567890123456789012345678901234567890');
+const cloidResult = await sdk.getCloid(
+  "0x1234567890123456789012345678901234567890"
+);
 
 // Response structure
 interface GetCloidResponse {
@@ -366,21 +368,21 @@ interface GetCloidResponse {
 ```typescript
 // Complete integration workflow
 async function setupIntegration() {
-  const userAddress = '0x1234567890123456789012345678901234567890';
-  
+  const userAddress = "0x1234567890123456789012345678901234567890";
+
   // Step 1: Assign CLOID for tracking
   const assignResult = await sdk.assignCloid({
     address: userAddress,
     // cloid: customCloid // Optional: provide your own CLOID
   });
-  
+
   if (assignResult.success) {
     console.log(`CLOID assigned: ${assignResult.data.cloid}`);
-    
+
     // Step 2: Verify assignment
     const cloidResult = await sdk.getCloid(userAddress);
     console.log(`Retrieved CLOID: ${cloidResult.data.cloid}`);
-    
+
     // Step 3: All subsequent orders from this address will be tracked
     // ... proceed with normal order creation workflow
   }
@@ -392,15 +394,15 @@ async function setupIntegration() {
 ```typescript
 try {
   const result = await sdk.assignCloid({
-    address: '0x1234567890123456789012345678901234567890'
+    address: "0x1234567890123456789012345678901234567890",
   });
-  
+
   if (!result.success) {
-    console.error('Assignment failed:', result.message);
+    console.error("Assignment failed:", result.message);
     // Handle business logic errors (e.g., CLOID already assigned)
   }
 } catch (error) {
-  console.error('Request failed:', error.message);
+  console.error("Request failed:", error.message);
   // Handle network/validation errors
 }
 ```
