@@ -3,9 +3,9 @@ export interface LimitsOrderRequest {
     orderId?: string;
     userAddress: string;
     coin: string;
-    is_buy: boolean;
+    isBuy: boolean;
     sz: number | string;
-    reduce_only: boolean;
+    reduceOnly: boolean;
     cloid?: string;
     threshold?: number;
     nonce: number;
@@ -13,6 +13,7 @@ export interface LimitsOrderRequest {
     s: string;
     v: number;
     chainId: number;
+    vaultAddress?: string;
 }
 
 // Leverage Types
@@ -132,6 +133,7 @@ export interface GenerateSignatureRequest {
     reduceOnly?: boolean;
     leverage?: number;
     isCross?: boolean;
+    vaultAddress?: string;
 }
 
 
