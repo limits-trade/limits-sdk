@@ -87,9 +87,9 @@ async function quickStart() {
   const result = await sdk.createOrder({
     userAddress,
     coin: "BTC",
-    is_buy: true,
+    isBuy: true,
     sz: 1.0,
-    reduce_only: false,
+    reduceOnly: false,
     nonce: orderNonce,
     r,
     s,
@@ -117,9 +117,9 @@ const { r, s, v } = ethers.utils.splitSignature(signature);
 const orderResult = await sdk.createOrder({
   userAddress: "0x...",
   coin: "BTC",
-  is_buy: true,
+  isBuy: true,
   sz: 1.0,
-  reduce_only: false,
+  reduceOnly: false,
   nonce: 123456,
   r: r, // From EIP-712 signature above
   s: s, // From EIP-712 signature above
@@ -199,8 +199,8 @@ The SDK provides a helper method to generate EIP-712 signature data for differen
 const orderData = {
   nonce: 123456,
   coin: "BTC",
-  is_buy: true,
-  reduce_only: false,
+  isBuy: true,
+  reduceOnly: false,
   userAddress: "0x...",
   chainId: 1,
 };

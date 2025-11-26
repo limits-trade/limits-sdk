@@ -23,9 +23,9 @@ describe("LimitsSDK", () => {
         const orderRequest = {
           userAddress: "0x123",
           coin: "BTC",
-          is_buy: true,
+          isBuy: true,
           sz: 1,
-          reduce_only: false,
+          reduceOnly: false,
           nonce: 123456,
           r: "0xabc",
           s: "0xdef",

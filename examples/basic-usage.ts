@@ -124,9 +124,9 @@ async function basicTradingExample(): Promise<void> {
         const orderResult = await sdk.createOrder({
             userAddress,
             coin: 'BTC',
-            is_buy: true,
+            isBuy: true,
             sz: 0.1,
-            reduce_only: false,
+            reduceOnly: false,
             nonce: orderNonce,
             r: orderSig.r,
             s: orderSig.s,
