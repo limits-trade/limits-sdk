@@ -1,4 +1,9 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import axios, {
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+} from 'axios';
 import { LimitsSDKConfig, SDKError } from './types';
 
 export class HttpClient {
@@ -39,10 +44,14 @@ export class HttpClient {
 
     if (error.response) {
       // Server responded with error status
-      sdkError.message = error.response.data?.message || error.response.data?.error || error.message;
+      sdkError.message =
+        error.response.data?.message ||
+        error.response.data?.error ||
+        error.message;
       sdkError.status = error.response.status;
       sdkError.response = error.response.data;
-      sdkError.code = error.response.data?.code || `HTTP_${error.response.status}`;
+      sdkError.code =
+        error.response.data?.code || `HTTP_${error.response.status}`;
     } else if (error.request) {
       // Request was made but no response received
       sdkError.message = 'Network error - no response received';
@@ -55,18 +64,37 @@ export class HttpClient {
 
     return sdkError;
   }
-  
-  async get<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-    const response: AxiosResponse<T> = await this.client.get(url, { params: data, ...config });
+
+  async get<T>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig
+  ): Promise<T> {
+    const response: AxiosResponse<T> = await this.client.get(url, {
+      params: data,
+      ...config,
+    });
     return response.data;
   }
 
-  async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-    const response: AxiosResponse<T> = await this.client.post(url, data, config);
+  async post<T>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig
+  ): Promise<T> {
+    const response: AxiosResponse<T> = await this.client.post(
+      url,
+      data,
+      config
+    );
     return response.data;
   }
 
-  async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  async put<T>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig
+  ): Promise<T> {
     const response: AxiosResponse<T> = await this.client.put(url, data, config);
     return response.data;
   }
