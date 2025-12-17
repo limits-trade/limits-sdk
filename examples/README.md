@@ -12,167 +12,250 @@ import { ethers } from 'ethers';
 const sdk = new LimitsSDK();
 
 async function basicTradingExample(): Promise<void> {
-    const devicePk = ethers.Wallet.createRandom().privateKey;
-    // Make sure you store the device private key as its used for all actions 
+  const devicePk = ethers.Wallet.createRandom().privateKey;
+  // Make sure you store the device private key as its used for all actions
 
-    const privateKey = 'your-private-key';
-    const device = new ethers.Wallet(devicePk);
-    const wallet = new ethers.Wallet(privateKey);
-    const userAddress = wallet.address;
-    const deviceAddress = device.address;
+  const privateKey = 'your-private-key';
+  const device = new ethers.Wallet(devicePk);
+  const wallet = new ethers.Wallet(privateKey);
+  const userAddress = wallet.address;
+  const deviceAddress = device.address;
 
-    try {
-        console.log('🚀 Starting basic trading example...\n');
+  try {
+    console.log('🚀 Starting basic trading example...\n');
 
-        // 1. Connect user first
-        console.log('📱 Connecting user...');
-        const connectionResult = await sdk.connectUser({
-            userAddress,
-            deviceAddress: deviceAddress,
-        });
-        console.log('✅ User connected:', connectionResult);
+    // 1. Connect user first
+    console.log('📱 Connecting user...');
+    const connectionResult = await sdk.connectUser({
+      userAddress,
+      deviceAddress: deviceAddress,
+    });
+    console.log('✅ User connected:', connectionResult);
 
-        // 2. Submit Builder Fee Permit to Hyperliquid
-        const nonceForBuilder = Date.now();
-        const permit = sdk.getHyperliquidPermit('approveBuilderFee', nonceForBuilder, 1n);
-        const feeTypedData = sdk.createHyperliquidTypedData(permit.types, permit.message, 1n);
-        const permitSignature = await wallet.signTypedData(
-            feeTypedData.domain,
-            permit.types,
-            permit.message
-        );
-        const permitResult = await sdk.submitHLPermit(permit, permitSignature, 1);
-        console.log('✅ Builder fee permit submitted:', permitResult);
+    // 2. Submit Builder Fee Permit to Hyperliquid
+    const nonceForBuilder = Date.now();
+    const permit = sdk.getHyperliquidPermit(
+      'approveBuilderFee',
+      nonceForBuilder,
+      1n
+    );
+    const feeTypedData = sdk.createHyperliquidTypedData(
+      permit.types,
+      permit.message,
+      1n
+    );
+    const permitSignature = await wallet.signTypedData(
+      feeTypedData.domain,
+      permit.types,
+      permit.message
+    );
+    const permitResult = await sdk.submitHLPermit(permit, permitSignature, 1);
+    console.log('✅ Builder fee permit submitted:', permitResult);
 
-        // 3. Submit Agent Permit to Hyperliquid and verify user
-        const nonceForAgent = Date.now();
-        const agentPermit = sdk.getHyperliquidPermit('approveAgent', nonceForAgent, 1n);
-        const agentTypedData = sdk.createHyperliquidTypedData(agentPermit.types, agentPermit.message, 1n);
-        const agentSignature = await wallet.signTypedData(
-            agentTypedData.domain,
-            agentPermit.types,
-            agentPermit.message
-        );
-        const agentResult = await sdk.submitHLPermit(agentPermit, agentSignature, 1);
-        console.log('✅ Agent permit submitted:', agentResult);
+    // 3. Submit Agent Permit to Hyperliquid and verify user
+    const nonceForAgent = Date.now();
+    const agentPermit = sdk.getHyperliquidPermit(
+      'approveAgent',
+      nonceForAgent,
+      1n
+    );
+    const agentTypedData = sdk.createHyperliquidTypedData(
+      agentPermit.types,
+      agentPermit.message,
+      1n
+    );
+    const agentSignature = await wallet.signTypedData(
+      agentTypedData.domain,
+      agentPermit.types,
+      agentPermit.message
+    );
+    const agentResult = await sdk.submitHLPermit(
+      agentPermit,
+      agentSignature,
+      1
+    );
+    console.log('✅ Agent permit submitted:', agentResult);
 
-        const sig = ethers.Signature.from(agentSignature);
-        const verifyResult = await sdk.verifyUser({
-            userAddress,
-            agentAddress: connectionResult.hypeApiAddress,
-            nonce: nonceForAgent,
-            r: sig.r,
-            s: sig.s,
-            v: sig.v,
-            chainId: 1,
-        });
-        console.log('✅ User keys verified:', verifyResult);
+    const sig = ethers.Signature.from(agentSignature);
+    const verifyResult = await sdk.verifyUser({
+      userAddress,
+      agentAddress: connectionResult.hypeApiAddress,
+      nonce: nonceForAgent,
+      r: sig.r,
+      s: sig.s,
+      v: sig.v,
+      chainId: 1,
+    });
+    console.log('✅ User keys verified:', verifyResult);
 
-        // 4. Set leverage
-        console.log('⚖️ Setting cross leverage to 10x for BTC...');
-        const leverageNonce = Date.now();
-        const leverageSignatureData = sdk.generateSignatureData({
-            userAddress,
-            coin: 'BTC',
-            nonce: leverageNonce,
-            chainId: 1,
-            signatureType: 'updateLeverage',
-            leverage: 10,
-            isCross: true,
-        });
+    // 4. Set leverage
+    console.log('⚖️ Setting cross leverage to 10x for BTC...');
+    const leverageNonce = Date.now();
+    const leverageSignatureData = sdk.generateSignatureData({
+      userAddress,
+      coin: 'BTC',
+      nonce: leverageNonce,
+      chainId: 1,
+      signatureType: 'updateLeverage',
+      leverage: 10,
+      isCross: true,
+    });
 
-        const leverageSignature = await device.signTypedData(
-            leverageSignatureData.domain,
-            leverageSignatureData.types,
-            leverageSignatureData.message
-        );
-        const leverageSig = ethers.Signature.from(leverageSignature);
+    const leverageSignature = await device.signTypedData(
+      leverageSignatureData.domain,
+      leverageSignatureData.types,
+      leverageSignatureData.message
+    );
+    const leverageSig = ethers.Signature.from(leverageSignature);
 
-        const leverageResult = await sdk.updateLeverage({
-            userAddress,
-            coin: 'BTC',
-            leverage: 10,
-            isCross: true,
-            r: leverageSig.r,
-            s: leverageSig.s,
-            v: leverageSig.v,
-            nonce: leverageNonce,
-            chainId: 1,
-        });
-        console.log('✅ Leverage set:', leverageResult);
+    const leverageResult = await sdk.updateLeverage({
+      userAddress,
+      coin: 'BTC',
+      leverage: 10,
+      isCross: true,
+      r: leverageSig.r,
+      s: leverageSig.s,
+      v: leverageSig.v,
+      nonce: leverageNonce,
+      chainId: 1,
+    });
+    console.log('✅ Leverage set:', leverageResult);
 
-        // 5. Create an order
-        console.log('💰 Creating buy order for 0.1 BTC...');
-        const orderNonce = Date.now();
+    // 5. Create an order
+    console.log('💰 Creating buy order for 0.1 BTC...');
+    const orderNonce = Date.now();
 
-        const orderSignatureData = sdk.generateSignatureData({
-            userAddress,
-            coin: 'BTC',
-            nonce: orderNonce,
-            chainId: 1,
-            signatureType: 'createOrder',
-            isBuy: true,
-            reduceOnly: false,
-        });
+    const orderSignatureData = sdk.generateSignatureData({
+      userAddress,
+      coin: 'BTC',
+      nonce: orderNonce,
+      chainId: 1,
+      signatureType: 'createOrder',
+      isBuy: true,
+      reduceOnly: false,
+    });
 
-        const orderSignature = await device.signTypedData(
-            orderSignatureData.domain,
-            orderSignatureData.types,
-            orderSignatureData.message
-        );
-        const orderSig = ethers.Signature.from(orderSignature);
+    const orderSignature = await device.signTypedData(
+      orderSignatureData.domain,
+      orderSignatureData.types,
+      orderSignatureData.message
+    );
+    const orderSig = ethers.Signature.from(orderSignature);
 
-        const orderResult = await sdk.createOrder({
-            userAddress,
-            coin: 'BTC',
-            isBuy: true,
-            sz: 0.1,
-            reduceOnly: false,
-            nonce: orderNonce,
-            r: orderSig.r,
-            s: orderSig.s,
-            v: orderSig.v,
-            chainId: 1,
-            threshold: 0.01,
-        });
-        console.log('✅ Order created:', orderResult);
+    const orderResult = await sdk.createOrder({
+      userAddress,
+      coin: 'BTC',
+      isBuy: true,
+      sz: 0.1,
+      reduceOnly: false,
+      nonce: orderNonce,
+      r: orderSig.r,
+      s: orderSig.s,
+      v: orderSig.v,
+      chainId: 1,
+      threshold: 0.01,
+    });
+    console.log('✅ Order created:', orderResult);
 
-        // 6. Verify device
-        console.log('🔐 Verifying device...');
-        const deviceNonce = Date.now();
-        const agentAddress = '0x9876543210987654321098765432109876543210';
+    // 6. Create batch orders
+    console.log('📦 Creating batch orders...');
+    const batchNonce = Date.now();
 
-        const deviceSignatureData = sdk.generateSignatureData({
-            userAddress,
-            agentAddress,
-            nonce: deviceNonce,
-            chainId: 1,
-            signatureType: 'verifyDevice',
-        });
+    const batchSignatureData = sdk.generateSignatureData({
+      signatureType: 'createOrders',
+      userAddress,
+      nonce: batchNonce,
+      chainId: 1,
+      orders: [
+        {
+          coin: 'BTC',
+          isBuy: true,
+          reduceOnly: false,
+        },
+        {
+          coin: 'ETH',
+          isBuy: false,
+          reduceOnly: false,
+        },
+      ],
+    });
 
-        const deviceSignature = await device.signTypedData(
-            deviceSignatureData.domain,
-            deviceSignatureData.types,
-            deviceSignatureData.message
-        );
-        const deviceSig = ethers.Signature.from(deviceSignature);
+    const batchSignature = await device.signTypedData(
+      batchSignatureData.domain,
+      batchSignatureData.types,
+      batchSignatureData.message
+    );
+    const batchSig = ethers.Signature.from(batchSignature);
 
-        const deviceResult = await sdk.verifyDevice({
-            r: deviceSig.r,
-            s: deviceSig.s,
-            v: deviceSig.v,
-            nonce: deviceNonce,
-            agentAddress,
-            userAddress,
-            chainId: 1,
-        });
-        console.log('✅ Device verified:', deviceResult);
+    const batchOrderResult = await sdk.createOrders({
+      userAddress,
+      validateOrder: true,
+      validationParams: {
+        leverage: 10,
+        managementInterval: 3000,
+        builderFee: 15,
+        builderAddress: '0x746337a98821e1e38AA2bAd0e77900d98B80609e',
+        takerFallbackInterval: 60000,
+      },
+      nonce: batchNonce,
+      r: batchSig.r,
+      s: batchSig.s,
+      v: batchSig.v,
+      chainId: 1,
+      orders: [
+        {
+          coin: 'BTC',
+          cloid: '0x4c494d495470a25c11944846c4cf3bb1',
+          isBuy: true,
+          sz: '0.00022',
+          reduceOnly: false,
+        },
+        {
+          coin: 'ETH',
+          cloid: '0x4c494d495470a25c11944846c4cf3bb2',
+          isBuy: false,
+          sz: '0.01',
+          reduceOnly: false,
+        },
+      ],
+    });
+    console.log('✅ Batch orders created:', batchOrderResult);
 
-        console.log('🎉 All operations completed successfully!');
+    // 7. Verify device
+    console.log('🔐 Verifying device...');
+    const deviceNonce = Date.now();
+    const agentAddress = '0x9876543210987654321098765432109876543210';
 
-    } catch (error) {
-        console.error('❌ Error occurred:', error);
-    }
+    const deviceSignatureData = sdk.generateSignatureData({
+      userAddress,
+      agentAddress,
+      nonce: deviceNonce,
+      chainId: 1,
+      signatureType: 'verifyDevice',
+    });
+
+    const deviceSignature = await device.signTypedData(
+      deviceSignatureData.domain,
+      deviceSignatureData.types,
+      deviceSignatureData.message
+    );
+    const deviceSig = ethers.Signature.from(deviceSignature);
+
+    const deviceResult = await sdk.verifyDevice({
+      r: deviceSig.r,
+      s: deviceSig.s,
+      v: deviceSig.v,
+      nonce: deviceNonce,
+      agentAddress,
+      userAddress,
+      chainId: 1,
+    });
+    console.log('✅ Device verified:', deviceResult);
+
+    console.log('🎉 All operations completed successfully!');
+  } catch (error) {
+    console.error('❌ Error occurred:', error);
+  }
 }
 
 // Run the example
@@ -197,7 +280,7 @@ async function handleErrors() {
   try {
     // Example: Create an order with proper signature generation
     const orderNonce = Date.now();
-    
+
     const orderSignatureData = sdk.generateSignatureData({
       userAddress,
       coin: 'BTC',
@@ -228,24 +311,24 @@ async function handleErrors() {
       chainId: 1,
       threshold: 0.01,
     });
-    
+
     console.log('Order created successfully:', result);
   } catch (error) {
     console.error('❌ Error occurred:', error);
-    
+
     if (error instanceof Error) {
       const sdkError = error as any;
-      
+
       console.error('Error details:');
       console.error('Message:', sdkError.message);
-      
+
       if (sdkError.code) {
         console.error('Code:', sdkError.code);
       }
-      
+
       if (sdkError.status) {
         console.error('Status:', sdkError.status);
-        
+
         // Handle specific HTTP status codes
         if (sdkError.status === 400) {
           console.error('Bad request - check your parameters');
@@ -257,11 +340,11 @@ async function handleErrors() {
           console.error('Server error - try again later');
         }
       }
-      
+
       if (sdkError.response) {
         console.error('Response:', sdkError.response);
       }
-      
+
       // Handle specific error types
       if (sdkError.code === 'NETWORK_ERROR') {
         console.error('Network error - check your connection');
@@ -274,8 +357,8 @@ async function handleErrors() {
 ## TypeScript Types
 
 ```typescript
-import { 
-  LimitsOrderRequest, 
+import {
+  LimitsOrderRequest,
   LeverageRequest,
   ConnectUserRequest,
   VerifyDeviceRequest,
@@ -353,7 +436,9 @@ const leverageRequest: LeverageRequest = {
 
 // Verify user keys request
 const verifyKeysNonce = Date.now();
-const verifyKeysSig = ethers.Signature.from('0x...' /* signature from user wallet */);
+const verifyKeysSig = ethers.Signature.from(
+  '0x...' /* signature from user wallet */
+);
 const verifyKeysRequest: VerifyKeysRequest = {
   userAddress,
   agentAddress,
@@ -366,7 +451,9 @@ const verifyKeysRequest: VerifyKeysRequest = {
 
 // Verify device request
 const deviceNonce = Date.now();
-const deviceSig = ethers.Signature.from('0x...' /* signature from device wallet */);
+const deviceSig = ethers.Signature.from(
+  '0x...' /* signature from device wallet */
+);
 const verifyDeviceRequest: VerifyDeviceRequest = {
   r: deviceSig.r,
   s: deviceSig.s,
@@ -378,13 +465,18 @@ const verifyDeviceRequest: VerifyDeviceRequest = {
 };
 
 // Hyperliquid permit types
-const builderFeePermit = sdk.getHyperliquidPermit('approveBuilderFee', Date.now(), 1n, connectionResult.hypeApiAddress);
+const builderFeePermit = sdk.getHyperliquidPermit(
+  'approveBuilderFee',
+  Date.now(),
+  1n,
+  connectionResult.hypeApiAddress
+);
 const agentPermit = sdk.getHyperliquidPermit('approveAgent', Date.now(), 1n);
 
 // Typed data for signing
 const typedData = sdk.createHyperliquidTypedData(
-  agentPermit.types, 
-  agentPermit.message, 
+  agentPermit.types,
+  agentPermit.message,
   1n
 );
 ```
