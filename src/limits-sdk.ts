@@ -24,6 +24,9 @@ import {
   HyperliquidRequest,
   API_URL,
   EXCHANGE_ENDPOINT,
+  BatchLimitsOrderRequest,
+  BatchOrderResponse,
+  GenerateSignatureRequestV2,
 } from './types';
 import { Signature } from 'ethers';
 
@@ -52,11 +55,24 @@ export class LimitsSDK {
   }
 
   /**
+   * Create orders
+   * @param ordersRequest - The order details
+   * @returns Promise with orders response
+   */
+  async createOrders(
+    ordersRequest: BatchLimitsOrderRequest
+  ): Promise<BatchOrderResponse> {
+    return this.httpClient.post<BatchOrderResponse>('/orders', ordersRequest);
+  }
+
+  /**
    * Update leverage for a trading pair
    * @param leverageRequest - The leverage update details
    * @returns Promise with leverage response
    */
-  async updateLeverage(leverageRequest: LeverageRequest): Promise<LeverageResponse> {
+  async updateLeverage(
+    leverageRequest: LeverageRequest
+  ): Promise<LeverageResponse> {
     return this.httpClient.post<LeverageResponse>('/leverage', leverageRequest);
   }
 
@@ -67,8 +83,12 @@ export class LimitsSDK {
    * @param connectRequest - User connection details
    * @returns Promise with connection response
    */
-  async connectUser(connectRequest: ConnectUserRequest): Promise<ConnectUserResponse> {
-    const response = await this.httpClient.post<ApiResponse<ConnectUserResponse>>('/connect', connectRequest);
+  async connectUser(
+    connectRequest: ConnectUserRequest
+  ): Promise<ConnectUserResponse> {
+    const response = await this.httpClient.post<
+      ApiResponse<ConnectUserResponse>
+    >('/connect', connectRequest);
     return response.data as ConnectUserResponse;
   }
 
@@ -77,8 +97,13 @@ export class LimitsSDK {
    * @param verifyRequest - Key verification details
    * @returns Promise with verification response
    */
-  async verifyUser(verifyRequest: VerifyKeysRequest): Promise<VerifyKeysResponse> {
-    const response = await this.httpClient.put<ApiResponse<VerifyKeysResponse>>('/connect', verifyRequest);
+  async verifyUser(
+    verifyRequest: VerifyKeysRequest
+  ): Promise<VerifyKeysResponse> {
+    const response = await this.httpClient.put<ApiResponse<VerifyKeysResponse>>(
+      '/connect',
+      verifyRequest
+    );
     return response.data as VerifyKeysResponse;
   }
 
@@ -87,17 +112,24 @@ export class LimitsSDK {
    * @param verifyRequest - Device verification details
    * @returns Promise with device verification response
    */
-  async verifyDevice(verifyRequest: VerifyDeviceRequest): Promise<VerifyDeviceResponse> {
-    const response = await this.httpClient.post<ApiResponse<VerifyDeviceResponse>>('/verifyDevice', verifyRequest);
+  async verifyDevice(
+    verifyRequest: VerifyDeviceRequest
+  ): Promise<VerifyDeviceResponse> {
+    const response = await this.httpClient.post<
+      ApiResponse<VerifyDeviceResponse>
+    >('/verifyDevice', verifyRequest);
     return response.data as VerifyDeviceResponse;
   }
 
   /**
- * Assign a CLOID (Client Order ID) to an address
- * @param assignRequest - The assignment request with address and optional cloid
- * @returns Promise with assignment response
- */
-  async assignCloid(assignRequest: { address: string; cloid?: string }): Promise<{
+   * Assign a CLOID (Client Order ID) to an address
+   * @param assignRequest - The assignment request with address and optional cloid
+   * @returns Promise with assignment response
+   */
+  async assignCloid(assignRequest: {
+    address: string;
+    cloid?: string;
+  }): Promise<{
     success: boolean;
     message: string;
     data: {
@@ -130,11 +162,19 @@ export class LimitsSDK {
 
   /**
    * Generate EIP-712 signature data for different request types
-   * @param signatureType - The type of signature (createOrder, updateLeverage, etc.)
-   * @param request - The request object containing the data to sign
+   * @param request - The request object containing the data to sign (V1 format)
    * @returns SignatureData object with domain, types, and message for EIP-712 signing
    */
-  generateSignatureData(request: GenerateSignatureRequest): SignatureData {
+  generateSignatureData(request: GenerateSignatureRequest): SignatureData;
+  /**
+   * Generate EIP-712 signature data for different request types
+   * @param request - The request object containing the data to sign (V2 format)
+   * @returns SignatureData object with domain, types, and message for EIP-712 signing
+   */
+  generateSignatureData(request: GenerateSignatureRequestV2): SignatureData;
+  generateSignatureData(
+    request: GenerateSignatureRequest | GenerateSignatureRequestV2
+  ): SignatureData {
     const domain = {
       name: 'LimitsTrade',
       version: '1',
@@ -142,7 +182,17 @@ export class LimitsSDK {
     };
 
     switch (request.signatureType) {
-      case 'createOrder':
+      case 'createOrder': {
+        const req = request as GenerateSignatureRequest;
+        if (
+          !req.coin ||
+          req.isBuy === undefined ||
+          req.reduceOnly === undefined
+        ) {
+          throw new Error(
+            'Invalid createOrder request: missing required properties (coin, isBuy, reduceOnly)'
+          );
+        }
         return {
           domain,
           types: {
@@ -155,15 +205,58 @@ export class LimitsSDK {
             ],
           },
           message: {
-            userAddress: request.userAddress,
-            coin: request.coin,
-            nonce: request.nonce,
-            isBuy: request.isBuy,
-            reduceOnly: request.reduceOnly,
+            userAddress: req.userAddress,
+            coin: req.coin,
+            nonce: req.nonce,
+            isBuy: req.isBuy,
+            reduceOnly: req.reduceOnly,
           },
         };
-
-      case 'updateLeverage':
+      }
+      case 'createOrders': {
+        const req = request as GenerateSignatureRequestV2;
+        if (!req.orders || req.orders.length === 0) {
+          throw new Error(
+            'Invalid createOrders request: missing or empty orders array'
+          );
+        }
+        return {
+          domain,
+          types: {
+            OrderDetails: [
+              { name: 'coin', type: 'string' },
+              { name: 'isBuy', type: 'bool' },
+              { name: 'reduceOnly', type: 'bool' },
+            ],
+            VerifyOrders: [
+              { name: 'userAddress', type: 'string' },
+              { name: 'nonce', type: 'uint64' },
+              { name: 'orders', type: 'OrderDetails[]' },
+            ],
+          },
+          message: {
+            userAddress: req.userAddress,
+            nonce: req.nonce,
+            orders: req.orders.map((order) => ({
+              coin: order.coin,
+              isBuy: order.isBuy,
+              reduceOnly: order.reduceOnly,
+            })),
+          },
+        };
+      }
+      case 'updateLeverage': {
+        if (request.leverage === undefined || request.isCross === undefined) {
+          throw new Error(
+            'Invalid updateLeverage request: missing required properties (leverage, isCross)'
+          );
+        }
+        const coin = (request as GenerateSignatureRequest).coin;
+        if (!coin) {
+          throw new Error(
+            'Invalid updateLeverage request: missing coin property'
+          );
+        }
         return {
           domain,
           types: {
@@ -177,13 +270,17 @@ export class LimitsSDK {
           },
           message: {
             userAddress: request.userAddress,
-            coin: request.coin,
+            coin: coin,
             nonce: request.nonce,
             leverage: request.leverage,
             isCross: request.isCross,
           },
         };
-      case 'verifyDevice':
+      }
+      case 'verifyDevice': {
+        if (!request.agentAddress) {
+          throw new Error('Invalid verifyDevice request: missing agentAddress');
+        }
         return {
           domain,
           types: {
@@ -199,8 +296,11 @@ export class LimitsSDK {
             nonce: request.nonce,
           },
         };
+      }
       default:
-        throw new Error(`Unsupported signature type: ${request.signatureType}`);
+        throw new Error(
+          `Unsupported signature type: ${(request as any).signatureType}`
+        );
     }
   }
 
@@ -218,7 +318,7 @@ export class LimitsSDK {
     type: string,
     nonce: number,
     chainId: BigInt,
-    agentAddress?: string,
+    agentAddress?: string
   ): { types: HyperliquidPermitTypes; message: HyperliquidPermitMessage } {
     let types: HyperliquidPermitTypes;
     const signatureChainId = Number(chainId);
@@ -266,9 +366,13 @@ export class LimitsSDK {
   }
 
   /**
-  * Create EIP-712 typed data for Hyperliquid trading actions
-  */
-  createHyperliquidTypedData(types: HyperliquidPermitTypes, message: HyperliquidPermitMessage, chainId: BigInt) {
+   * Create EIP-712 typed data for Hyperliquid trading actions
+   */
+  createHyperliquidTypedData(
+    types: HyperliquidPermitTypes,
+    message: HyperliquidPermitMessage,
+    chainId: BigInt
+  ) {
     const domain = this.getHyperliquidDomain(chainId);
     return {
       domain,
@@ -287,8 +391,8 @@ export class LimitsSDK {
   }
 
   /**
- * Submit agent permit to Hyperliquid
- */
+   * Submit agent permit to Hyperliquid
+   */
   async submitHLPermit(
     permit: {
       types: HyperliquidPermitTypes;
@@ -309,7 +413,7 @@ export class LimitsSDK {
       };
 
       // Add type-specific fields
-      if (permit.message.type === "approveBuilderFee") {
+      if (permit.message.type === 'approveBuilderFee') {
         action.maxFeeRate = permit.message.maxFeeRate;
         action.builder = permit.message.builder;
       } else if (permit.message.agentAddress && permit.message.agentName) {
@@ -329,59 +433,57 @@ export class LimitsSDK {
 
       return await this.callHyperApi(EXCHANGE_ENDPOINT, hyperRequest);
     } catch (error) {
-      console.error("Failed to submit agent permit:", error);
+      console.error('Failed to submit agent permit:', error);
       return {
-        status: "error",
+        status: 'error',
         error:
-          error instanceof Error ? error.message : "Failed to submit permit",
+          error instanceof Error ? error.message : 'Failed to submit permit',
       };
     }
   }
 
   /**
- * Call Hyperliquid API with signed permit data
- */
+   * Call Hyperliquid API with signed permit data
+   */
   private async callHyperApi(
     endpoint: string,
     request: HyperliquidRequest
   ): Promise<HyperliquidResponse> {
     try {
-
       const response = await fetch(API_URL + endpoint, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(request),
-        credentials: "omit", // equivalent to withCredentials: false
+        credentials: 'omit', // equivalent to withCredentials: false
       });
 
       const data = await response.json();
 
       if (!response.ok) {
         return {
-          status: "error",
+          status: 'error',
           error:
             data.error || `HTTP ${response.status}: ${response.statusText}`,
         };
       }
 
       return {
-        status: "success",
+        status: 'success',
         response: data,
       };
     } catch (error) {
-      console.error("Hyperliquid API call failed:", error);
+      console.error('Hyperliquid API call failed:', error);
       return {
-        status: "error",
+        status: 'error',
         error:
-          error instanceof Error ? error.message : "Unknown error occurred",
+          error instanceof Error ? error.message : 'Unknown error occurred',
       };
     }
   }
 
   private toBeHex(value: number | BigInt): string {
-    return "0x" + value.toString(16);
+    return '0x' + value.toString(16);
   }
-
 }

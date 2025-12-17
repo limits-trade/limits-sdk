@@ -17,6 +17,25 @@ export interface LimitsOrderRequest {
   chainId: number;
 }
 
+export interface BatchLimitsOrderRequest {
+  userAddress: string;
+  threshold?: number;
+  validateOrder?: boolean;
+  validationParams?: AdditionalOrderParams;
+  nonce: number;
+  r: string;
+  s: string;
+  v: number;
+  chainId: number;
+  orders: Array<{
+    coin: string;
+    isBuy: boolean;
+    sz: number | string;
+    reduceOnly: boolean;
+    cloid?: string;
+  }>;
+}
+
 export type AdditionalOrderParams = {
   leverage: number;
   builderAddress?: string;
@@ -89,6 +108,39 @@ export interface ApiResponse<T = unknown> {
   error?: string;
 }
 
+export interface BatchOrderResponse extends ApiResponse {
+  data?: {
+    total: number;
+    successful: number;
+    failed: number;
+    results: Array<{
+      index: number;
+      success: true;
+      data: any;
+      order: {
+        coin: string;
+        isBuy: boolean;
+        sz: number | string;
+        reduceOnly: boolean;
+        cloid?: string;
+      };
+    }>;
+    errors: Array<{
+      index: number;
+      success: false;
+      error: string;
+      order: {
+        coin: string;
+        isBuy: boolean;
+        sz: number | string;
+        reduceOnly: boolean;
+        cloid?: string;
+      };
+    }>;
+  };
+  orders?: BatchLimitsOrderRequest | [];
+}
+
 export interface OrderResponse extends ApiResponse {
   order?: LimitsOrderRequest;
 }
@@ -112,7 +164,11 @@ export interface SDKError extends Error {
 }
 
 // EIP-712 Signature Types
-export type SignatureType = "createOrder" | "updateLeverage" | "verifyDevice";
+export type SignatureType =
+  | 'createOrder'
+  | 'createOrders'
+  | 'updateLeverage'
+  | 'verifyDevice';
 
 export interface EIP712Domain {
   name: string;
@@ -139,6 +195,23 @@ export interface GenerateSignatureRequest {
   agentAddress?: string;
   isBuy?: boolean;
   reduceOnly?: boolean;
+  leverage?: number;
+  isCross?: boolean;
+  vaultAddress?: string;
+}
+
+export interface GenerateSignatureRequestV2 {
+  userAddress: string;
+  nonce: number;
+  chainId: number;
+  signatureType: SignatureType;
+  orders?: Array<{
+    coin: string;
+    isBuy: boolean;
+    reduceOnly: boolean;
+    cloid?: string;
+  }>;
+  agentAddress?: string;
   leverage?: number;
   isCross?: boolean;
   vaultAddress?: string;
@@ -194,8 +267,8 @@ export interface HyperliquidResponse {
   error?: string;
 }
 
-export const BUILDER_FEE_ADDRESS = "0x746337a98821e1e38AA2bAd0e77900d98B80609e";
-export const BUILDER_FEE = "0.1%";
-export const API_URL = "https://api.hyperliquid.xyz";
-export const EXCHANGE_ENDPOINT = "/exchange";
-export const INFO_ENDPOINT = "/info";
+export const BUILDER_FEE_ADDRESS = '0x746337a98821e1e38AA2bAd0e77900d98B80609e';
+export const BUILDER_FEE = '0.1%';
+export const API_URL = 'https://api.hyperliquid.xyz';
+export const EXCHANGE_ENDPOINT = '/exchange';
+export const INFO_ENDPOINT = '/info';
